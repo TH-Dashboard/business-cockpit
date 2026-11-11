@@ -271,6 +271,10 @@ Die Online-Demo zeigt ausschließlich fiktive Daten. Sie setzt keine eigenen Coo
 keine Nutzungsstatistik (`gatherUsageStats = false`). Eingaben werden nur für die Dauer der Sitzung gehalten. Die App
 läuft auf Streamlit Community Cloud; für Hosting und Server-Protokolle gilt deren Datenschutzerklärung.
 
+Die Daten stammen aus einem öffentlichen Übungsdatensatz und sind teilweise simuliert, es sind keine echten Personen-
+oder Kundendaten. Bei echten Daten arbeite ich nach den Grundsätzen der DSGVO: Anonymisierung, Datenminimierung und
+beschränkter Zugriff.
+
 ## Kontakt und Lizenz
 
 Projekt von **Denise Tirrel** · Data-Analytics-Portfolio · [LinkedIn](https://www.linkedin.com/in/denise-tirrel/) · [GitHub](https://github.com/denisetirrel-ops)

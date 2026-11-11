@@ -139,6 +139,9 @@ The online demo uses fictional data only. It sets no cookies of its own, has no 
 statistics (`gatherUsageStats = false`). Nothing you enter is stored beyond your session. The app is hosted on
 Streamlit Community Cloud, whose own privacy policy applies to hosting and server logs.
 
+The data is a public practice dataset plus simulated values, no real personal or customer data. When working with
+real data, I follow GDPR principles: anonymisation, data minimisation and restricted access.
+
 ## Contact and licence
 
 Project by **Denise Tirrel** · data analytics portfolio · [LinkedIn](https://www.linkedin.com/in/denise-tirrel/) · [GitHub](https://github.com/denisetirrel-ops)
