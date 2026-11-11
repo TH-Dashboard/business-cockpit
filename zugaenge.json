@@ -1,0 +1,41 @@
+{
+  "demo": true,
+  "nutzer": {
+    "berater": {
+      "rolle": "berater",
+      "mandant": null,
+      "salz": "275afd6d0a4ce8f72d93c71a9971695c",
+      "hash": "a0fb7e18045b1a3b2fda2f98894d5ef31486137819a0758645d43910e5fc4902"
+    },
+    "inhaber": {
+      "rolle": "inhaber",
+      "mandant": null,
+      "salz": "b862b6b879867dafdc0cec81e9ca1063",
+      "hash": "701cdf7a85e00354297ffd149da81ee7ba8f9345d345c349c24d5bb7a5cc62f1"
+    },
+    "central": {
+      "rolle": "mandant",
+      "mandant": "Central",
+      "salz": "1dba954bdea158173da465166fa8eb7d",
+      "hash": "d343c87d1d5f32ee5deedca6fa787bc00356f45540e95e8d02f729428b9e2575"
+    },
+    "east": {
+      "rolle": "mandant",
+      "mandant": "East",
+      "salz": "57e53567f7addf0133252ccc5a674da0",
+      "hash": "39740ab41282d3917a4eebb830a8886d35fee5a60a5f4d943674b96621183298"
+    },
+    "south": {
+      "rolle": "mandant",
+      "mandant": "South",
+      "salz": "98546bbaa3aea0a7496a460561930c38",
+      "hash": "cfcd67f9ebd4bea0da6071cee62ecdef0af5f9e4402bb2dbe67c2535271aeaf6"
+    },
+    "west": {
+      "rolle": "mandant",
+      "mandant": "West",
+      "salz": "f76f413586bb56b2775e433c065f1511",
+      "hash": "7babfcb2fc13fec72bb496c6f35a9ee02402fb8c82ae923a0435df32826ee653"
+    }
+  }
+}

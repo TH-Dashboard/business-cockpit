@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# lokale Arbeitsstände der App (gehören nicht ins Repository)
+massnahmen.sqlite
+einstellungen.json
+.streamlit/secrets.toml
+
+# Editor
+*.code-workspace
+.vscode/
