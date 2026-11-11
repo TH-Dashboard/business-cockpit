@@ -167,6 +167,31 @@ if "sprache_s" not in ss:                                   # ?lang=en im Link �
 S.setze(ss.sprache_s)
 
 
+def uebersetzung_sperren(sprache: str) -> None:
+    """Browser-Übersetzung abschalten und die Seitensprache richtig setzen.
+
+    Streamlit liefert die Seite immer mit lang="en" aus. Ein deutscher Chrome bietet dann an,
+    sie zu übersetzen; die Übersetzung ändert die Seite hinter dem Rücken von React und führt
+    zu Fehlern wie „NotFoundError: removeChild“. Die App ist selbst zweisprachig, also aus.
+    """
+    js = f"""<script>
+    const doc = window.parent.document, h = doc.documentElement;
+    h.setAttribute("lang", "{sprache}"); h.setAttribute("translate", "no"); h.classList.add("notranslate");
+    if (!doc.querySelector('meta[name="google"]')) {{
+        const m = doc.createElement("meta"); m.name = "google"; m.content = "notranslate"; doc.head.appendChild(m);
+    }}
+    </script>"""
+    try:
+        import streamlit.components.v1 as components
+        with st.sidebar:
+            components.html(js, height=0)
+    except Exception:                                       # nur Komfort, darf die App nie stoppen
+        pass
+
+
+uebersetzung_sperren(ss.sprache_s)
+
+
 def sprachwahl(ort):
     neu = ort.segmented_control("🌐", list(S.SPRACHEN), format_func=S.SPRACHEN.get, default=ss.sprache_s,
                                 key=f"sprache_{id(ort)}", label_visibility="collapsed")
