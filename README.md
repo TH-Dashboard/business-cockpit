@@ -11,7 +11,7 @@ client, is already overdrawn and customers pay almost twice as slowly as the ind
 next and turns every warning into an action – the four questions an owner asks every Monday:
 *Where do I stand against plan? Why? Will the cash last? What do I do now?*
 
-**Live demo:** _link follows once the app is online_ – one click logs you in as advisor, owner or client.
+**Live demo:** [https://tirrel-business-dashboard.streamlit.app](https://tirrel-business-dashboard.streamlit.app/?lang=en) – one click logs you in as advisor, owner or client.
 The free hosting puts the app to sleep after a while; the first visit can take about 30 seconds.
 
 **Built with** SQL (SQLite, PostgreSQL export), Python, pandas, matplotlib, Streamlit, optionally Power BI Desktop as
