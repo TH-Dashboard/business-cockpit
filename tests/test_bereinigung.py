@@ -203,3 +203,18 @@ def test_exporte_ohne_formeln():
     assert all(z.data_type != "f" for zeile in blatt.iter_rows() for z in zeile)
     zeilen = pd.read_csv(io.BytesIO(B.als_csv(df)), encoding="utf-8-sig").name.tolist()
     assert zeilen[0].startswith("'=") and str(zeilen[3]) == "-12"
+
+
+def test_haeufigste_schreibweise_bei_gleichstand_die_erste():
+    # zwei Schreibweisen gleich oft: die zuerst vorkommende gewinnt (wie vorher value_counts)
+    assert B._haeufigste(["a", "a", "a", "a", "b"], ["x", "X", "X", "x", "Y"]) == {"a": "x", "b": "Y"}
+    assert B._haeufigste(["a", "a", "a"], ["X", "x", "x"]) == {"a": "x"}
+
+
+def test_pruefpaket_uebernimmt_fertige_excel(ergebnis):
+    excel = b"PK-schon-gebaut"
+    zip_ = B.pruefpaket(ergebnis, UEBUNG.name, UEBUNG.read_bytes(), None, "", excel=excel)
+    with zipfile.ZipFile(io.BytesIO(zip_)) as z:
+        assert z.read("01_bereinigt/cockpit_tabellen_powerbi.xlsx") == excel
+        manifest = json.loads(z.read("manifest.json"))
+    assert manifest["dateien"]["01_bereinigt/cockpit_tabellen_powerbi.xlsx"]["bytes"] == len(excel)

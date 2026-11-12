@@ -305,6 +305,21 @@ def _ist_standardzahl(s: str) -> bool:
     return bool(re.fullmatch(r"-?\d+(\.\d+)?", s))
 
 
+def _texte(s: pd.Series, innen: bool) -> pd.Series:
+    """Wie _text, für eine ganze Spalte."""
+    # bewusst je Wert mit Python-re: pandas' Arrow-Strings kennen bei \s keine geschützten Leerzeichen
+    return s.map(lambda v: _text(v, innen))
+
+
+def _haeufigste(schluessel: list, werte: list) -> dict:
+    """Häufigster Wert je Schlüssel; bei Gleichstand der zuerst vorkommende."""
+    zaehler: dict = {}
+    for k, w in zip(schluessel, werte):
+        zaehler.setdefault(k, {})
+        zaehler[k][w] = zaehler[k].get(w, 0) + 1          # dict behält die Reihenfolge des ersten Auftretens
+    return {k: max(z, key=z.get) for k, z in zaehler.items()}
+
+
 # ---------------------------------------------------------------- Bereinigen
 def bereinige(roh: pd.DataFrame, zuordnung: dict[str, str] | None = None,
               einst: Einstellungen | None = None) -> Ergebnis:
@@ -316,6 +331,7 @@ def bereinige(roh: pd.DataFrame, zuordnung: dict[str, str] | None = None,
 
     roh = roh.fillna("").astype(str)
     quellzeile = pd.Series(np.arange(len(roh)) + 2, index=roh.index)   # Zeile 1 = Überschrift
+    n_zeilen, qz = len(roh), list(range(2, len(roh) + 2))
     aend, hinw = [], []
     werte: dict[str, pd.Series] = {}
     unlesbar: dict[str, pd.Series] = {}
@@ -334,67 +350,78 @@ def bereinige(roh: pd.DataFrame, zuordnung: dict[str, str] | None = None,
             werte[feld] = pd.Series(None, index=roh.index, dtype=object)
             unlesbar[feld] = pd.Series(False, index=roh.index)
             continue
-        orig = roh[zuordnung[feld]].fillna("")
-        txt = orig.map(lambda v: _text(v, einst.leerzeichen_innen))
-        geaendert = txt != orig
-        if f["typ"] == "text":
-            for i in orig.index[geaendert & (txt != "")]:
-                aend.append((quellzeile[i], feld, orig[i], txt[i], "R01"))
-        bad = pd.Series(False, index=roh.index)
+        orig_s = roh[zuordnung[feld]].fillna("")
+        txt_s = _texte(orig_s, einst.leerzeichen_innen)
+        # Ab hier mit einfachen Listen statt Einzelzugriffen auf pandas – gleiche Regeln, viel schneller
+        orig, txt = orig_s.tolist(), txt_s.tolist()
+        bad = [False] * n_zeilen
 
         if f["typ"] == "text":
-            out = txt.where(txt != "", None)
+            for i in range(n_zeilen):
+                if txt[i] != orig[i] and txt[i] != "":
+                    aend.append((qz[i], feld, orig[i], txt[i], "R01"))
+            out = txt_s.where(txt_s != "", None)
         elif f["typ"] == "kategorie":
-            out = txt.where(txt != "", None).astype(object)
             bekannt = KATEGORIEN.get(feld, {})
+            gefuellt = [i for i in range(n_zeilen) if txt[i] != ""]
+            schluessel = {i: _schluessel(txt[i]) for i in gefuellt}
             # häufigste Schreibweise je vereinfachter Form (für unbekannte Werte)
-            haeufig = (txt[txt != ""].groupby(txt[txt != ""].map(_schluessel))
-                       .agg(lambda s: s.value_counts().index[0]))
-            for i in out.index[out.notna()]:
-                k = _schluessel(out[i])
-                neu = bekannt.get(k) or haeufig.get(k, out[i])
+            haeufig = _haeufigste([schluessel[i] for i in gefuellt], [txt[i] for i in gefuellt])
+            werte_liste: list = [None] * n_zeilen
+            for i in gefuellt:
+                k = schluessel[i]
+                neu = bekannt.get(k) or haeufig.get(k, txt[i])
                 if neu != orig[i]:
-                    aend.append((quellzeile[i], feld, orig[i], neu, "R02" if neu != txt[i] else "R01"))
-                out[i] = neu
+                    aend.append((qz[i], feld, orig[i], neu, "R02" if neu != txt[i] else "R01"))
+                werte_liste[i] = neu
                 if bekannt and k not in bekannt:
-                    hinw.append((quellzeile[i], feld, out[i], "H02"))
+                    hinw.append((qz[i], feld, neu, "H02"))
+            out = pd.Series(werte_liste, index=roh.index, dtype=object)
         elif f["typ"] == "datum":
-            out = pd.Series(pd.NaT, index=roh.index, dtype="datetime64[ns]")
-            for i in roh.index[txt != ""]:
-                d, mehrdeutig = lies_datum(txt[i], schraeg)
+            werte_liste = [pd.NaT] * n_zeilen
+            for i in range(n_zeilen):
+                t = txt[i]
+                if t == "":
+                    continue
+                d, mehrdeutig = lies_datum(t, schraeg)
                 if d is None:
                     bad[i] = True
                     continue
-                out[i] = d
-                if not _ISO.match(txt[i]):
-                    aend.append((quellzeile[i], feld, orig[i], d.strftime("%Y-%m-%d"), "R03"))
+                werte_liste[i] = d
+                if not _ISO.match(t):
+                    aend.append((qz[i], feld, orig[i], d.strftime("%Y-%m-%d"), "R03"))
                 if mehrdeutig:
-                    mehrdeutig_zeilen.append(int(quellzeile[i]))
+                    mehrdeutig_zeilen.append(qz[i])
                     if datum_einzeln:
-                        hinw.append((quellzeile[i], feld, txt[i], "H03"))
+                        hinw.append((qz[i], feld, t, "H03"))
+            out = pd.Series(pd.to_datetime(werte_liste), index=roh.index).astype("datetime64[ns]")
         else:   # ganz, zahl, anteil
-            stil = _dezimal_stil(txt) if einst.dezimal == "auto" else einst.dezimal
-            out = pd.Series(np.nan, index=roh.index, dtype="float64")
-            for i in roh.index[txt != ""]:
-                x = lies_zahl(txt[i], stil)
+            stil = _dezimal_stil(txt_s) if einst.dezimal == "auto" else einst.dezimal
+            werte_liste = [np.nan] * n_zeilen
+            for i in range(n_zeilen):
+                t = txt[i]
+                if t == "":
+                    continue
+                x = lies_zahl(t, stil)
                 if x is None:
                     bad[i] = True
                     continue
                 regel = None if _ist_standardzahl(orig[i]) else "R04"
-                if f["typ"] == "anteil" and ("%" in txt[i] or 1 <= abs(x) <= 100):
+                if f["typ"] == "anteil" and ("%" in t or 1 <= abs(x) <= 100):
                     x, regel = round(x / 100, 10), "R05"
                 if f["typ"] == "ganz":
                     if not float(x).is_integer():
                         bad[i] = True
                         continue
-                    if regel in (None, "R04") and re.fullmatch(r"-?\d+\.0+", txt[i]):
+                    if regel in (None, "R04") and re.fullmatch(r"-?\d+\.0+", t):
                         regel = "R07"
-                out[i] = x
+                werte_liste[i] = x
                 if regel:
                     neu = str(int(x)) if f["typ"] == "ganz" or float(x).is_integer() else repr(float(x))
-                    aend.append((quellzeile[i], feld, orig[i], neu, regel))
+                    aend.append((qz[i], feld, orig[i], neu, regel))
+            out = pd.Series(werte_liste, index=roh.index, dtype="float64")
         werte[feld] = out
-        unlesbar[feld] = bad
+        unlesbar[feld] = pd.Series(bad, index=roh.index)
 
     df = pd.DataFrame(werte)
     df.insert(0, "quellzeile", quellzeile)
@@ -402,21 +429,25 @@ def bereinige(roh: pd.DataFrame, zuordnung: dict[str, str] | None = None,
     # ------------------------------------------------ Zeilen aussortieren (Grund + Originalwerte)
     aus = []   # (index, regel, detail)
     leer = (roh.apply(lambda s: s.str.strip()) == "").all(axis=1)
-    alle_text = roh.apply(lambda s: s.str.lower()).agg(" ".join, axis=1)
-    fuss = ~leer & df.order_id.isna() & alle_text.str.contains(r"\b(?:summe|gesamt|total|sum)\b")
+    fuss = ~leer & df.order_id.isna()
+    if fuss.any():   # Summenzeilen erkennen: nur die wenigen Zeilen ohne Bestellnummer durchsuchen
+        alle_text = roh[fuss].apply(lambda s: s.str.lower()).agg(" ".join, axis=1)
+        fuss &= alle_text.str.contains(r"\b(?:summe|gesamt|total|sum)\b").reindex(roh.index, fill_value=False)
     for i in roh.index[leer]:
         aus.append((i, "A01", ""))
     for i in roh.index[fuss]:
         aus.append((i, "A02", ""))
     raus = leer | fuss
     pflicht = [f for f, d in FELDER.items() if d["pflicht"]]
-    for i in roh.index[~raus]:
-        nicht_lesbar = [f for f in FELDER if unlesbar[f][i]]
+    ub = pd.DataFrame(unlesbar)[list(FELDER)]
+    leer_pflicht = df[pflicht].isna()
+    for i in roh.index[~raus & (ub.any(axis=1) | leer_pflicht.any(axis=1))]:
+        nicht_lesbar = [f for f in FELDER if ub.at[i, f]]
         if nicht_lesbar:
             aus.append((i, "A04", ", ".join(nicht_lesbar)))
             raus[i] = True
             continue
-        fehlt = [f for f in pflicht if pd.isna(df.at[i, f])]
+        fehlt = [f for f in pflicht if leer_pflicht.at[i, f]]
         if fehlt:
             aus.append((i, "A03", ", ".join(fehlt)))
             raus[i] = True
@@ -434,12 +465,15 @@ def bereinige(roh: pd.DataFrame, zuordnung: dict[str, str] | None = None,
     # Dubletten: erst identische Zeilen, dann gleiche Positions-ID mit anderem Inhalt
     felder = list(FELDER)
     if einst.dubletten_entfernen:
-        sig = df.loc[ok, felder].map(lambda v: "" if pd.isna(v) else str(v)).agg("␟".join, axis=1)
-        erste = sig.drop_duplicates()
-        for i in sig.index[sig.duplicated(keep="first")]:
-            j = erste[erste == sig[i]].index[0]
-            aus.append((i, "A05", f"= {int(quellzeile[j])}"))
-            raus[i] = True
+        teile = [df.loc[ok, c].map(lambda v: "" if pd.isna(v) else str(v)) for c in felder]
+        sig = teile[0].str.cat(teile[1:], sep="␟")
+        erste: dict = {}
+        for i, s in zip(sig.index, sig.tolist()):
+            if s in erste:
+                aus.append((i, "A05", f"= {int(quellzeile[erste[s]])}"))
+                raus[i] = True
+            else:
+                erste[s] = i
         ok = ~raus
     pid = df.order_details_id.where(ok)
     for i in roh.index[ok & pid.duplicated(keep="first") & pid.notna()]:
@@ -456,23 +490,25 @@ def bereinige(roh: pd.DataFrame, zuordnung: dict[str, str] | None = None,
         for tf in text_felder:
             if tf not in zuordnung:
                 continue
-            s = sauber[[id_feld, tf]].dropna()
-            form = s.groupby([s[id_feld], s[tf].str.casefold()])[tf].agg(lambda x: x.value_counts().index[0])
-            for i in s.index:
-                neu = form[(s.at[i, id_feld], s.at[i, tf].casefold())]
-                if neu != s.at[i, tf]:
-                    aend.append((sauber.at[i, "quellzeile"], tf, s.at[i, tf], neu, "R06"))
-                    sauber.at[i, tf] = neu
+            s = sauber[[id_feld, tf, "quellzeile"]].dropna()
+            ids, texte, zeilen = s[id_feld].tolist(), s[tf].tolist(), s["quellzeile"].tolist()
+            schluessel = list(zip(ids, (t.casefold() for t in texte)))
+            form = _haeufigste(schluessel, texte)
+            neu_liste = [form[k] for k in schluessel]
+            for z, alt, neu in zip(zeilen, texte, neu_liste):
+                if neu != alt:
+                    aend.append((z, tf, alt, neu, "R06"))
+            sauber.loc[s.index, tf] = neu_liste
 
     # ------------------------------------------------ Hinweise (bleiben drin)
     for id_feld, felder_ in (("customer_id", ["customer_name", "customer_segment"]),
                              ("product_id", ["product_name", "product_category"]),
                              ("order_id", ["order_date", "customer_id"])):
         for tf in felder_:
-            n = sauber.groupby(id_feld)[tf].nunique()
+            g = sauber.groupby(id_feld)
+            n, erste_zeile = g[tf].nunique(), g["quellzeile"].first()
             for wert in n[n > 1].index:
-                zeilen = sauber.loc[sauber[id_feld] == wert, "quellzeile"]
-                hinw.append((int(zeilen.iloc[0]), tf, f"{id_feld} {wert}: {int(n[wert])}", "H04"))
+                hinw.append((int(erste_zeile[wert]), tf, f"{id_feld} {wert}: {int(n[wert])}", "H04"))
     # Ausreißer: Tukey-Zaun auf logarithmierten Werten (Umsätze und Mengen sind stark rechtsschief)
     for feld in ("order_sales", "quantity"):
         x = sauber[feld].astype(float)
@@ -697,8 +733,11 @@ def _sha(b: bytes) -> str:
 
 
 def pruefpaket(e: Ergebnis, quelle_name: str, quelle_bytes: bytes, tabellen: dict | None = None,
-               bericht: str = "") -> bytes:
-    """ZIP mit bereinigten Daten, Prüfberichten und Manifest (SHA-256 je Datei)."""
+               bericht: str = "", excel: bytes | None = None) -> bytes:
+    """ZIP mit bereinigten Daten, Prüfberichten und Manifest (SHA-256 je Datei).
+
+    excel: schon erzeugte Power-BI-Datei; spart das zweite Schreiben (dauert sonst mehrere Sekunden).
+    """
     import quelle as Q
     dateien: dict[str, bytes] = {}
 
@@ -706,10 +745,12 @@ def pruefpaket(e: Ergebnis, quelle_name: str, quelle_bytes: bytes, tabellen: dic
         return als_csv(df)
 
     dateien["01_bereinigt/positionen_bereinigt.csv"] = csv(e.sauber)
-    if tabellen:
+    if excel is None and tabellen:
         puffer = io.BytesIO()
         Q.exportiere_excel({n: tabellen[n] for n in Q.TABELLEN}, puffer)
-        dateien["01_bereinigt/cockpit_tabellen_powerbi.xlsx"] = puffer.getvalue()
+        excel = puffer.getvalue()
+    if excel is not None:
+        dateien["01_bereinigt/cockpit_tabellen_powerbi.xlsx"] = excel
     dateien["02_pruefung/ausgeschlossene_zeilen.csv"] = csv(e.ausgeschlossen.assign(
         grund=e.ausgeschlossen.regel.map(lambda r: REGELN[r][0])))
     dateien["02_pruefung/aenderungsprotokoll.csv"] = csv(e.aenderungen.assign(
