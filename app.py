@@ -55,7 +55,7 @@ def _demo() -> bool:
 
 
 DEMO = _demo()
-UPLOAD_MAX_MB = 20                                   # Grenze für Uploads in der öffentlichen Demo
+UPLOAD_MAX_MB = 20                                   # Grenze für Uploads; gleich wie server.maxUploadSize in .streamlit/config.toml
 POWERBI_MOEGLICH = os.name == "nt" and not DEMO      # Power BI Desktop gibt es nur lokal unter Windows
 
 # Farben aus der Unicorn-Präsentation (Corporate Identity)
