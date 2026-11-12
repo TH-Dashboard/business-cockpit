@@ -383,12 +383,13 @@ def abgleich(a: dict[str, pd.DataFrame], b: dict[str, pd.DataFrame]) -> pd.DataF
     return pd.DataFrame(zeilen)
 
 
-def exportiere_excel(tabellen: dict[str, pd.DataFrame], ziel: Path | str) -> Path:
-    """Schreibt die sechs Tabellen als Blätter in eine Excel-Datei zum Laden in Power BI."""
-    ziel = Path(ziel)
+def exportiere_excel(tabellen: dict[str, pd.DataFrame], ziel):
+    """Schreibt die sechs Tabellen als Blätter in eine Excel-Datei zum Laden in Power BI (Pfad oder Puffer)."""
+    ziel = ziel if hasattr(ziel, "write") else Path(ziel)
     with pd.ExcelWriter(ziel, engine="openpyxl", datetime_format="YYYY-MM-DD") as xl:
+        from bereinigung import entschaerfe          # Texte wie "=..." nicht als Formel speichern
         for name, df in tabellen.items():
-            df.to_excel(xl, sheet_name=name, index=False)
+            entschaerfe(df).to_excel(xl, sheet_name=name, index=False)
     return ziel
 
 

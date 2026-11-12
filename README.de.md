@@ -108,6 +108,57 @@ Liegt die Datenbank woanders, setze vor dem Start die Variable `COCKPIT_DB`:
 set COCKPIT_DB=C:\pfad\zu\unicorn_cockpit.sqlite
 ```
 
+## Daten aufbereiten (Schritt 0)
+
+Die Seite **🧹 Daten aufbereiten** ersetzt die Fleißarbeit in Power Query. Eingang ist ein Export mit einer Zeile je
+Bestellposition (CSV oder Excel, Spaltennamen deutsch oder englisch, z. B. „Order Date“ oder „Bestelldatum“).
+
+1. **Datei wählen**: eigene Datei hochladen oder die Übungsdatei `daten/uebung/unicorn_export_schmutzig.csv` nehmen.
+2. **Spalten zuordnen und Regeln einstellen**: die Zuordnung ist automatisch und lässt sich ändern. Ob 03/04/2018
+   Monat/Tag oder Tag/Monat ist, erkennt die App aus der Datei selbst: Werte wie 25/03 lassen nur eine Lesart zu, die
+   Mehrheit gilt dann für alle. Einstellbar sind außerdem Dezimalzeichen, Leerzeichen, Dubletten und die Ausreißer-Grenze.
+3. **Bereinigen und prüfen**: Kennzahlen, Diagramm je Regel und vier Reiter (Qualitätsprofil, geänderte Werte,
+   ausgeschlossene Zeilen mit Originalwerten, Hinweise).
+4. **Übernehmen**: das ganze Cockpit rechnet mit der aufbereiteten Datei (Seitenleiste „Datenquelle“). Download als
+   Prüfpaket (ZIP mit Manifest und SHA-256 je Datei), als Excel für Power BI und als bereinigte CSV.
+
+So sieht das an der Übungsdatei aus (echte Zeilen, Zeilennummer wie in der Datei):
+
+| Zeile | Feld | Vorher | Nachher | Regel |
+|---|---|---|---|---|
+| 2 | Bestelldatum | `09/06/2015` | `2015-09-06` | R03 · Monat/Tag, aus 3.504 eindeutigen Werten der Datei erkannt |
+| 14 | Umsatz | `518,00 $` | `518` | R04 |
+| 10 | DB I | `(88)` | `-88` | R04 · Klammer = Minus |
+| 9 | Rabatt | `20%` | `0,2` | R05 |
+| 13 | Segment | `CONSUMER` | `Consumer` | R02 |
+| 50 | Kundenname | `chris selesnick` | `Chris Selesnick` | R06 · häufigste Schreibweise derselben Kunden-ID |
+| 176 | ganze Zeile | Versand vor Bestellung | ausgeschlossen | A10 · mit allen Originalwerten im Bericht |
+
+| Regel | Was passiert |
+|---|---|
+| R01 | Leerzeichen, geschützte und unsichtbare Zeichen bereinigen |
+| R02 | Kategorien vereinheitlichen („standard“, „Standard“ → „Standard Class“, „ost“ → „East“) |
+| R03 | Datum aus ISO, TT.MM.JJJJ, MM/TT/JJJJ, Excel-Seriennummer → JJJJ-MM-TT |
+| R04 | Zahlen mit $, €, Tausenderpunkt, Dezimalkomma, Klammer-Minus lesbar machen |
+| R05 | Rabatt „20%“ oder „20“ → 0,2 |
+| R06 | Schreibweise je Kunden- und Produkt-ID vereinheitlichen (nur Groß/klein, häufigste Form) |
+| R07 | Ganzzahl „3.0“ → 3 |
+| A01–A10 | Zeile ausschließen: leer, Summenzeile, Pflichtwert fehlt oder unlesbar, Dublette, doppelte Positions-ID, Menge ≤ 0, Umsatz < 0, Rabatt außerhalb 0–<100 %, Versand vor Auftrag |
+| H01–H05 | nur Hinweis: Ausreißer (Tukey-Zaun auf log-Werten), unbekannte Kategorie, mehrdeutiges Datum, gleiche ID mit verschiedenen Angaben, DB I > Umsatz |
+
+Exporte (CSV, Excel, Prüfpaket) sind gegen Formel-Einschleusung geschützt: Text, der mit `=`, `+`, `-` oder `@`
+beginnt, bekommt ein Hochkomma, damit Excel ihn nicht ausführt. Echte Zahlen wie `-12` bleiben unverändert.
+
+Es wird nichts geschätzt oder aufgefüllt. Plan, Fixkosten und Zahlungen entstehen danach mit denselben Annahmen wie
+bei Unicorn (`aufbau.py`, Standardwerte für andere Jahre und Regionen). Das Cockpit braucht mindestens zwei
+Kalenderjahre. Mit der Übungsdatei kommen exakt die Zahlen der SQLite-Datei heraus; nur 257 Produktnamen
+unterscheiden sich, weil die echten Unicorn-Daten doppelte und geschützte Leerzeichen enthalten.
+
+Übungsdatei neu erzeugen:
+```
+python -c "import aufbau as A, bereinigung as B, quelle as Q; s, _ = B.schmutzig_machen(A.roh_aus_fakt(Q.lade_sqlite('daten/unicorn_cockpit.sqlite')['fakt_umsatz'])); s.to_csv('daten/uebung/unicorn_export_schmutzig.csv', sep=';', index=False, encoding='utf-8-sig')"
+```
+
 ## Power BI Desktop als Datenquelle (Schritt 4)
 
 Solange eine .pbix in Power BI Desktop geöffnet ist, läuft darin ein lokaler Analysis-Services-Server.
@@ -182,7 +233,8 @@ Ohne `zugaenge.json` startet die App ohne Anmeldung (wie bisher).
 python -m pip install pytest
 python -m pytest -q
 ```
-Die Tests prüfen die Kernzahlen (Umsatz, DB I, EBIT, Kontostand 2018), die Mandanten-Umlage, den Benchmark,
+Die Tests schicken die Übungsdatei durch die Bereinigung und prüfen, dass das Cockpit danach exakt dieselben Zahlen
+zeigt wie mit der SQLite-Datei. Außerdem prüfen sie die Kernzahlen (Umsatz, DB I, EBIT, Kontostand 2018), die Mandanten-Umlage, den Benchmark,
 den Abgleich SQLite gegen Power BI, die Pseudonymisierung und die Zugänge. Schlägt ein Test fehl, hat eine
 Änderung eine Zahl verschoben.
 
@@ -190,6 +242,7 @@ den Abgleich SQLite gegen Power BI, die Pseudonymisierung und die Zugänge. Schl
 
 | Seite | Inhalt |
 |---|---|
+| Daten aufbereiten | Schritt 0: Export hochladen, Spalten zuordnen, bereinigen, Prüfbericht, ins Cockpit übernehmen, Prüfpaket |
 | Überblick | 4 KPI-Kacheln mit Ampel (Umsatz, DB I, EBIT, Kontostand), Lagetext, Monatsverlauf, Signale |
 | Plan-Ist | DB-I-Wasserfall (Menge, Mix, Preis/Rabatt), Rabattstufen, Regionen, Kategorien, Fixkosten |
 | Liquidität | Kontostand 13 Wochen zurück und voraus, Zahlungsverzug (Histogramm + Dichte), säumige Kunden |
@@ -234,12 +287,14 @@ zusätzlich, wie sich der Kontostand tatsächlich entwickelt hat, als Rückblick
 | `massnahmen.py` | Maßnahmen speichern und laden |
 | `ki.py` | Faktenzettel und Aufruf der Claude-API |
 | `quelle.py` | Datenquellen SQLite und Power BI Desktop, Abgleich |
+| `bereinigung.py` | Schritt 0: Export lesen, Spalten erkennen, bereinigen, prüfen, Prüfpaket |
+| `aufbau.py` | baut aus bereinigten Positionen die Cockpit-Tabellen (nutzt auch `gen_data.py`) |
 | `zugang.py` | Zugänge, Rollen, Passwort-Hashes |
 | `sprache.py` | Texte Deutsch/Englisch und Zahlenformate |
 | `sql/`, `sql_abfragen.py` | Kennzahlen als SQL-Abfragen, Ausführung für App und Tests |
-| `daten/` | SQLite-Datenbank, Datendokumentation, Export-Abfrage und Generator (`erzeugung/`) |
+| `daten/` | SQLite-Datenbank, Datendokumentation, Export-Abfrage und Generator (`erzeugung/`), Übungsdatei (`uebung/`) |
 | `docs/` | Kennzahlen, Datenmodell, Diagramme |
-| `tests/test_cockpit.py` | automatische Tests |
+| `tests/` | automatische Tests (`test_cockpit.py`, `test_bereinigung.py`) |
 | `einstellungen.json` | gespeicherte Schwellen (entsteht beim ersten Speichern) |
 
 ## Regeln und Schwellen (Standard in `logik.py`, änderbar unter Frühwarnung)
@@ -270,6 +325,8 @@ Optional anderes Modell: `set COCKPIT_MODELL=claude-haiku-5-5`. Die KI bekommt n
 Die Online-Demo zeigt ausschließlich fiktive Daten. Sie setzt keine eigenen Cookies, hat kein Tracking und sendet
 keine Nutzungsstatistik (`gatherUsageStats = false`). Eingaben werden nur für die Dauer der Sitzung gehalten. Die App
 läuft auf Streamlit Community Cloud; für Hosting und Server-Protokolle gilt deren Datenschutzerklärung.
+Hochgeladene Dateien (Schritt 0) bleiben nur im Arbeitsspeicher der Sitzung und werden nicht gespeichert. Die Demo
+bittet trotzdem, keine echten Kunden- oder Firmendaten hochzuladen, und nimmt höchstens 20 MB an.
 
 Die Daten stammen aus einem öffentlichen Übungsdatensatz und sind teilweise simuliert, es sind keine echten Personen-
 oder Kundendaten. Bei echten Daten arbeite ich nach den Grundsätzen der DSGVO: Anonymisierung, Datenminimierung und

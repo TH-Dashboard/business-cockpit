@@ -2,6 +2,7 @@
 
 Start:  python -m streamlit run app.py
 """
+import io
 import json
 import os
 import urllib.parse
@@ -13,6 +14,8 @@ import pandas as pd
 import streamlit as st
 
 import importlib
+import aufbau as A
+import bereinigung as BR
 import logik as L
 import sql_abfragen as SQL
 import diagramme as D
@@ -22,7 +25,7 @@ import quelle as Q
 import sprache as S
 import zugang as Z
 from sprache import T
-for _m in (S, Q, L, D, ki, M, Z):   # Code-Änderungen ohne Neustart übernehmen
+for _m in (S, Q, L, A, BR, D, ki, M, Z):   # Code-Änderungen ohne Neustart übernehmen
     importlib.reload(_m)
 
 st.set_page_config(page_title="Unternehmer-Cockpit", page_icon="🧭", layout="wide")
@@ -52,6 +55,7 @@ def _demo() -> bool:
 
 
 DEMO = _demo()
+UPLOAD_MAX_MB = 20                                   # Grenze für Uploads in der öffentlichen Demo
 POWERBI_MOEGLICH = os.name == "nt" and not DEMO      # Power BI Desktop gibt es nur lokal unter Windows
 
 # Farben aus der Unicorn-Präsentation (Corporate Identity)
@@ -360,16 +364,26 @@ if _zug["nutzer"] and b_.button(T("Abmelden", "Log out"), use_container_width=Tr
     ss.clear()
     ss.sprache_s = sprache
     st.rerun()
-QUELLEN = {"sqlite": T("SQLite-Datei", "SQLite file"), "powerbi": "Power BI Desktop"}
+QUELLEN = {"sqlite": T("SQLite-Datei", "SQLite file")}
+if POWERBI_MOEGLICH:
+    QUELLEN["powerbi"] = "Power BI Desktop"
+if ss.get("upload_daten") is not None and ROLLE != "mandant":
+    QUELLEN["upload"] = T("Aufbereitete Datei", "Prepared file")
 ss.setdefault("quelle_s", "sqlite")
 ss.setdefault("pbi_neu", 0)
-if ROLLE == "mandant" or not POWERBI_MOEGLICH:
-    quelle = "sqlite"          # Mandanten und die Online-Demo wählen keine Datenquelle
+ss.setdefault("upload_neu", 0)
+if ss.quelle_s not in QUELLEN:
+    ss.quelle_s = "sqlite"
+if ROLLE == "mandant" or len(QUELLEN) == 1:
+    quelle = "sqlite"          # Mandanten wählen keine Datenquelle
 else:
     quelle = st.sidebar.radio(T("Datenquelle", "Data source"), list(QUELLEN), index=list(QUELLEN).index(ss.quelle_s),
-                              format_func=QUELLEN.get, horizontal=True)
+                              format_func=QUELLEN.get, horizontal=len(QUELLEN) == 2)
 ss.quelle_s = quelle
 QUELLE_TEXT, PBI_ABGLEICH, D_GESAMT = QUELLEN["sqlite"], None, None
+if quelle == "upload":
+    D_GESAMT = ss.upload_daten
+    QUELLE_TEXT = T("aufbereitete Datei ", "prepared file ") + ss.upload_name
 if quelle == "powerbi":
     instanzen = Q.pbi_instanzen()
     if not instanzen:
@@ -425,7 +439,7 @@ PSEUDO = st.sidebar.toggle(T("Kundennamen pseudonymisieren", "Pseudonymise custo
                                   "Replaces customer names everywhere with “Customer 0123”, including signals, "
                                   "the briefing and questions to the AI."))
 ss.pseudo_s = PSEUDO
-KEY = (ss.quelle_s, ss.pbi_neu, PSEUDO, S.aktiv())       # Sprache: Texte in gecachten Ergebnissen
+KEY = (ss.quelle_s, ss.pbi_neu, ss.upload_neu, PSEUDO, S.aktiv())       # Sprache: Texte in gecachten Ergebnissen
 
 
 @st.cache_data(show_spinner=False, max_entries=8)
@@ -476,10 +490,11 @@ elif modus == "extern":
     ss.mandant_s = MANDANT
 D_ = mandant_daten(MANDANT, KEY) if MANDANT else D_GESAMT
 M.setze(MANDANT, ss.setdefault("massnahmen_demo", {}) if DEMO else None)
-st.sidebar.caption((T(f"Unicorn-Daten · Region {MANDANT} als Mandant", f"Unicorn data · region {MANDANT} as client")
-                    if MANDANT else T("Unicorn-Daten · Gesamtfirma", "Unicorn data · whole company"))
+st.sidebar.caption((T(f"{D_GESAMT.name}-Daten · Region {MANDANT} als Mandant", f"{D_GESAMT.name} data · region {MANDANT} as client")
+                    if MANDANT else T(f"{D_GESAMT.name}-Daten · Gesamtfirma", f"{D_GESAMT.name} data · whole company"))
                    + T(" · Quelle: ", " · source: ") + QUELLE_TEXT)
-ss.setdefault("stichtag_s", tage[-1])
+if ss.get("stichtag_s") not in tage:      # z. B. nach Wechsel der Datenquelle
+    ss.stichtag_s = tage[-1]
 stichtag = st.sidebar.selectbox(T("Stichtag (Monatsende)", "Reporting date (month end)"), tage,
                                 index=tage.index(ss.stichtag_s), format_func=L.monat)
 ss.stichtag_s = stichtag
@@ -532,14 +547,18 @@ def sql_zeigen(namen: list[str], s):
         return
     with st.expander(T("🧾 SQL hinter diesen Zahlen", "🧾 SQL behind these figures")):
         st.caption(T("Die App rechnet mit pandas; dieselben Zahlen entstehen direkt in der SQLite-Datenbank mit "
-                     "diesen Abfragen (Ordner sql/, automatisch gegeneinander getestet).",
+                     "diesen Abfragen (Ordner sql/, automatisch gegeneinander getestet)."
+                     + (" Bei der aufbereiteten Datei läuft die Abfrage auf einer Datenbank im Speicher."
+                        if ss.quelle_s == "upload" else ""),
                      "The app calculates with pandas; the same figures come straight from the SQLite database with "
-                     "these queries (folder sql/, automatically tested against each other)."))
+                     "these queries (folder sql/, automatically tested against each other)."
+                     + (" For the prepared file the query runs on an in-memory database."
+                        if ss.quelle_s == "upload" else "")))
         for n in namen:
             st.markdown(f"**`sql/{n}.sql`**")
             st.code(SQL.text(n), language="sql")
             try:
-                df = SQL.ausfuehren(n, s)
+                df = SQL.ausfuehren(n, s, db=ss.upload_sqlite if ss.quelle_s == "upload" else None)
             except Exception as e:  # noqa: BLE001
                 st.warning(T("Abfrage nicht ausführbar: ", "Query failed: ") + str(e))
                 continue
@@ -1265,6 +1284,357 @@ def benchmark_seite():
             "payment terms are simulated."))
 
 
+# ------------------------------------------------------------------ Schritt 0: Daten aufbereiten
+UEBUNG_DATEI = Path(__file__).resolve().parent / "daten" / "uebung" / "unicorn_export_schmutzig.csv"
+
+
+@st.cache_data(show_spinner=False, max_entries=4)
+def _lies(inhalt: bytes, name: str, blatt):
+    return BR.lies_datei(inhalt, name, blatt)
+
+
+@st.cache_data(show_spinner=False, max_entries=4)
+def _bereinige(inhalt: bytes, name: str, blatt, zuordnung: tuple, einst: tuple):
+    return BR.bereinige(_lies(inhalt, name, blatt), dict(zuordnung), BR.Einstellungen(**dict(einst)))
+
+
+def _regel(r: str) -> str:
+    return T(*BR.REGELN[r])
+
+
+def _feld(f: str) -> str:
+    if f in BR.FELDER:
+        return BR.FELDER[f]["de"] if not S.en() else BR.FELDER[f]["en"]
+    return f
+
+
+def _feldliste(text: str) -> str:
+    return ", ".join(_feld(x.strip()) if x.strip() in BR.FELDER else x for x in str(text).split(","))
+
+
+def aufbereitung():
+    kopf(T("Schritt 0 · Daten", "Step 0 · Data"), T("Daten aufbereiten", "Prepare data"))
+    st.markdown('<div class="lage">' + T(
+        "Lade einen Export mit <b>einer Zeile je Bestellposition</b> hoch (CSV oder Excel). Die App erkennt die "
+        "Spalten, vereinheitlicht Datum, Zahlen und Schreibweisen und sortiert unbrauchbare Zeilen mit Grund aus. "
+        "<b>Nichts wird geschätzt oder aufgefüllt.</b> Jede Änderung steht im Protokoll. Danach rechnet das Cockpit "
+        "mit den bereinigten Daten; Plan, Fixkosten und Zahlungen werden wie bei Unicorn simuliert.",
+        "Upload an export with <b>one row per order line</b> (CSV or Excel). The app detects the columns, "
+        "standardises dates, numbers and spellings and sets aside unusable rows with a reason. "
+        "<b>Nothing is estimated or filled in.</b> Every change is logged. The cockpit then runs on the cleaned "
+        "data; plan, fixed costs and payments are simulated as for Unicorn.") + "</div>", unsafe_allow_html=True)
+
+    # ---------------------------------------------------------- 1 Datei
+    st.subheader(T("1 · Datei wählen", "1 · Choose a file"))
+    links, rechts = st.columns([3, 2])
+    hoch = links.file_uploader(T("Export hochladen", "Upload export"), type=["csv", "txt", "xlsx", "xlsm", "xls"])
+    with rechts:
+        st.caption(T("Noch keine eigene Datei? Die Übungsdatei ist der Unicorn-Export mit typischen Fehlern: "
+                     "gemischte Datumsformate, Dollarzeichen, Prozentangaben, Dubletten, Leer- und Summenzeilen.",
+                     "No file of your own yet? The practice file is the Unicorn export with typical errors: "
+                     "mixed date formats, dollar signs, percentages, duplicates, empty and total rows."))
+        a, b = st.columns(2)
+        if a.button(T("Übungsdatei verwenden", "Use practice file"), use_container_width=True):
+            ss.aufb_datei = (UEBUNG_DATEI.name, UEBUNG_DATEI.read_bytes())
+        b.download_button(T("Übungsdatei laden", "Download practice file"), UEBUNG_DATEI.read_bytes(),
+                          UEBUNG_DATEI.name, "text/csv", use_container_width=True)
+    if hoch is not None and ss.get("aufb_hoch_id") != hoch.file_id:      # neue Datei im Upload-Feld
+        ss.aufb_hoch_id = hoch.file_id
+        ss.aufb_datei = (hoch.name, hoch.getvalue())
+    if DEMO:
+        st.warning(T("Öffentliche Demo: Bitte **keine echten Kunden- oder Firmendaten** hochladen. Die Datei bleibt "
+                     "nur in deiner Sitzung im Arbeitsspeicher und wird nicht gespeichert, läuft aber über einen "
+                     f"fremden Server (Streamlit Community Cloud). Höchstens {UPLOAD_MAX_MB} MB.",
+                     "Public demo: please **do not upload real customer or company data**. The file stays only in "
+                     "your session's memory and is not stored, but it passes through a third-party server "
+                     f"(Streamlit Community Cloud). {UPLOAD_MAX_MB} MB at most."), icon="🔒")
+    if not ss.get("aufb_datei"):
+        st.info(T("Wähle eine Datei oder nimm die Übungsdatei.", "Choose a file or use the practice file."), icon="📄")
+        return
+    name, inhalt = ss.aufb_datei
+    if DEMO and len(inhalt) > UPLOAD_MAX_MB * 1024 * 1024:
+        st.error(T(f"Die Datei ist größer als {UPLOAD_MAX_MB} MB. In der Online-Demo ist das die Grenze; "
+                   "lokal gestartet gibt es sie nicht.",
+                   f"The file is larger than {UPLOAD_MAX_MB} MB. That is the limit in the online demo; "
+                   "there is none when run locally."))
+        ss.aufb_datei = None
+        return
+    blatt = 0
+    if name.lower().endswith((".xlsx", ".xlsm", ".xls")):
+        blaetter = BR.excel_blaetter(inhalt)
+        blatt = st.selectbox(T("Tabellenblatt", "Sheet"), blaetter) if len(blaetter) > 1 else blaetter[0]
+    try:
+        roh = _lies(inhalt, name, blatt)
+    except Exception as e:  # noqa: BLE001
+        st.error(T("Die Datei konnte nicht gelesen werden: ", "The file could not be read: ") + str(e))
+        return
+    st.caption(T(f"**{name}** · {L.zahl(len(roh))} Zeilen · {len(roh.columns)} Spalten · Quelle bleibt unverändert",
+                 f"**{name}** · {L.zahl(len(roh))} rows · {len(roh.columns)} columns · source stays unchanged"))
+    with st.expander(T("Vorschau der Originaldatei (erste 20 Zeilen)", "Preview of the original file (first 20 rows)")):
+        st.dataframe(roh.head(20), hide_index=True)
+
+    # ---------------------------------------------------------- 2 Zuordnung und Regeln
+    st.subheader(T("2 · Spalten zuordnen und Regeln einstellen", "2 · Map columns and set rules"))
+    auto = BR.erkenne_spalten(list(roh.columns))
+    fehlt_auto = [f for f, d in BR.FELDER.items() if d["pflicht"] and f not in auto]
+    KEINE = T("– nicht vorhanden –", "– not available –")
+    zuordnung = {}
+    with st.expander(T(f"Spaltenzuordnung · {len(auto)} von {len(BR.FELDER)} Feldern automatisch erkannt",
+                       f"Column mapping · {len(auto)} of {len(BR.FELDER)} fields detected automatically"),
+                     expanded=bool(fehlt_auto)):
+        optionen = [KEINE, *roh.columns]
+        spalten = st.columns(3)
+        for n, (f, d) in enumerate(BR.FELDER.items()):
+            wahl = spalten[n % 3].selectbox(_feld(f) + (" *" if d["pflicht"] else ""), optionen,
+                                            index=optionen.index(auto[f]) if f in auto else 0,
+                                            key=f"zuo_{name}_{f}")
+            if wahl != KEINE:
+                zuordnung[f] = wahl
+        st.caption(T("* Pflichtfeld. Die Erkennung nutzt Namen wie „Order Date“, „Bestelldatum“ oder „auftragsdatum“.",
+                     "* Required. Detection uses names like “Order Date”, “Bestelldatum” or “auftragsdatum”."))
+    doppelt = {c for c in zuordnung.values() if list(zuordnung.values()).count(c) > 1}
+    fehlt = [f for f, d in BR.FELDER.items() if d["pflicht"] and f not in zuordnung]
+
+    c1, c2, c3 = st.columns(3)
+    dinfo = BR.datum_reihenfolge([roh[zuordnung[f]] for f, d in BR.FELDER.items()
+                                  if d["typ"] == "datum" and f in zuordnung])
+    erkannt = {"MDY": T("Monat/Tag", "month/day"), "DMY": T("Tag/Monat", "day/month")}[dinfo["reihenfolge"]]
+    schraeg = c1.radio(T("Datum mit Schrägstrich (03/04/2018)", "Dates with slashes (03/04/2018)"),
+                       ["auto", "MDY", "DMY"],
+                       format_func={"auto": T(f"automatisch (erkannt: {erkannt})", f"automatic (detected: {erkannt})"),
+                                    "MDY": T("Monat/Tag (US)", "month/day (US)"),
+                                    "DMY": T("Tag/Monat", "day/month")}.get,
+                       help=T("Die App sucht Werte, die nur eine Lesart zulassen (13/04 kann nur Tag/Monat sein), "
+                              "und wendet die Mehrheit auf Werte wie 03/04 an.",
+                              "The app looks for values with only one possible reading (13/04 can only be "
+                              "day/month) and applies the majority to values like 03/04."))
+    belege = T(f"Belege in der Datei: {L.zahl(dinfo['belege_mdy'])} × nur Monat/Tag möglich, "
+               f"{L.zahl(dinfo['belege_dmy'])} × nur Tag/Monat möglich.",
+               f"Evidence in the file: {L.zahl(dinfo['belege_mdy'])} × only month/day possible, "
+               f"{L.zahl(dinfo['belege_dmy'])} × only day/month possible.")
+    if dinfo["belege_mdy"] + dinfo["belege_dmy"] == 0:
+        c1.caption(T("Keine eindeutigen Schrägstrich-Daten gefunden; es gilt Monat/Tag. Bitte prüfen.",
+                     "No unambiguous slash dates found; month/day is used. Please check."))
+    elif not dinfo["eindeutig"]:
+        c1.warning(belege + T(" Die Datei mischt beide Reihenfolgen – mehrdeutige Werte werden einzeln gemeldet.",
+                              " The file mixes both orders – ambiguous values are listed one by one."))
+    elif schraeg not in ("auto", dinfo["reihenfolge"]):
+        c1.warning(belege + T(" Deine Einstellung widerspricht der Datei.", " Your setting contradicts the file."))
+    else:
+        c1.caption(belege)
+    dezimal = c2.radio(T("Dezimalzeichen in Zahlen", "Decimal separator"), ["auto", "komma", "punkt"],
+                       format_func={"auto": T("automatisch je Spalte", "automatic per column"),
+                                    "komma": T("Komma (1.234,50)", "comma (1.234,50)"),
+                                    "punkt": T("Punkt (1,234.50)", "point (1,234.50)")}.get)
+    innen = c3.toggle(T("Doppelte Leerzeichen im Text zusammenfassen", "Collapse double spaces in text"), value=True)
+    dubl = c3.toggle(T("Identische Zeilen entfernen", "Remove identical rows"), value=True)
+    faktor = c3.slider(T("Ausreißer-Grenze (×IQR, log)", "Outlier fence (×IQR, log)"), 1.0, 4.0, 1.5, 0.5,
+                       help=T("Tukey-Zaun auf logarithmierten Umsätzen und Mengen. Ausreißer bleiben drin und "
+                              "werden nur markiert.",
+                              "Tukey fence on logged sales and quantities. Outliers stay in and are only flagged."))
+    if fehlt or doppelt:
+        if fehlt:
+            st.error(T("Bitte noch zuordnen: ", "Please map: ") + ", ".join(_feld(f) for f in fehlt))
+        if doppelt:
+            st.error(T("Mehrfach zugeordnet: ", "Mapped more than once: ") + ", ".join(sorted(doppelt)))
+        return
+    einst = BR.Einstellungen(datum_schraeg=schraeg, dezimal=dezimal, leerzeichen_innen=innen,
+                             dubletten_entfernen=dubl, ausreisser_faktor=float(faktor))
+    lauf = (name, len(inhalt), tuple(sorted(zuordnung.items())), tuple(sorted(vars(einst).items())))
+
+    # ---------------------------------------------------------- 3 Bereinigen und prüfen
+    st.subheader(T("3 · Bereinigen und Ergebnis prüfen", "3 · Clean and check the result"))
+    if st.button(T("🧹 Bereinigung starten", "🧹 Start cleaning"), type="primary"):
+        with st.spinner(T("Prüfe und bereinige …", "Checking and cleaning …")):
+            try:
+                ss.aufb_ergebnis = _bereinige(inhalt, name, blatt, lauf[2], lauf[3])
+                ss.aufb_lauf = lauf
+            except Exception as e:  # noqa: BLE001
+                st.error(T("Bereinigung nicht möglich: ", "Cleaning not possible: ") + str(e))
+                return
+    if ss.get("aufb_lauf") is None or ss.aufb_lauf[0] != name:
+        st.caption(T("Noch nicht gestartet.", "Not started yet."))
+        return
+    if ss.aufb_lauf != lauf:
+        st.warning(T("Zuordnung oder Regeln wurden geändert. Starte die Bereinigung neu, damit das Ergebnis passt.",
+                     "Mapping or rules changed. Start cleaning again so the result matches."))
+    e: BR.Ergebnis = ss.aufb_ergebnis
+    k = e.kennzahlen
+    m = st.columns(6)
+    m[0].metric(T("Zeilen gelesen", "Rows read"), L.zahl(k["zeilen_gelesen"]))
+    m[1].metric(T("übernommen", "kept"), L.zahl(k["zeilen_uebernommen"]))
+    m[2].metric(T("ausgeschlossen", "excluded"), L.zahl(k["zeilen_ausgeschlossen"]))
+    m[3].metric(T("Werte vereinheitlicht", "Values standardised"), L.zahl(k["werte_geaendert"]))
+    m[4].metric(T("Hinweise", "Notes"), L.zahl(k["hinweise"]))
+    m[5].metric(T("Werte aufgefüllt", "Values filled in"), L.zahl(k["werte_aufgefuellt"]))
+    if k["zeilen_uebernommen"]:
+        von, bis = k["zeitraum"]
+        st.caption(T(f"Zeitraum {L.datum(von)}–{L.datum(bis)} · Umsatz {L.geld(k['umsatz'])} · DB I {L.geld(k['db1'])}",
+                     f"Period {L.datum(von)}–{L.datum(bis)} · sales {L.geld(k['umsatz'])} · profit {L.geld(k['db1'])}"))
+    dk = k.get("datum", {})
+    if dk.get("mehrdeutig") and "H03" not in set(e.hinweise.regel):
+        st.caption(T(f"📅 {L.zahl(dk['mehrdeutig'])} Datumswerte wie 03/04/2018 waren für sich allein mehrdeutig. "
+                     f"Die Datei belegt die Reihenfolge eindeutig ({L.zahl(max(dk['belege_mdy'], dk['belege_dmy']))} "
+                     "Werte lassen nur eine Lesart zu), deshalb stehen sie nicht einzeln in den Hinweisen.",
+                     f"📅 {L.zahl(dk['mehrdeutig'])} dates such as 03/04/2018 were ambiguous on their own. The file "
+                     f"settles the order clearly ({L.zahl(max(dk['belege_mdy'], dk['belege_dmy']))} values allow "
+                     "only one reading), so they are not listed one by one in the notes."))
+    regeln = e.regel_uebersicht()
+    if len(regeln):
+        quote = k["zeilen_ausgeschlossen"] / max(k["zeilen_gelesen"], 1)
+        zeige(D.bereinigung_regeln(regeln, k["zeilen_gelesen"], {r: _regel(r) for r in BR.REGELN}),
+              T(f"Von {L.zahl(k['zeilen_gelesen'])} Zeilen gehen {L.zahl(k['zeilen_uebernommen'])} ins Cockpit; "
+                f"{L.zahl(k['zeilen_ausgeschlossen'])} ({L.proz(quote, False, 2)}) fallen mit Grund heraus. "
+                f"{L.zahl(k['werte_geaendert'])} Werte wurden vereinheitlicht, keiner wurde erfunden.",
+                f"Of {L.zahl(k['zeilen_gelesen'])} rows, {L.zahl(k['zeilen_uebernommen'])} go into the cockpit; "
+                f"{L.zahl(k['zeilen_ausgeschlossen'])} ({L.proz(quote, False, 2)}) are set aside with a reason. "
+                f"{L.zahl(k['werte_geaendert'])} values were standardised, none was made up."))
+
+    t1, t2, t3, t4 = st.tabs([
+        T("Qualitätsprofil", "Quality profile"),
+        T(f"Geänderte Werte ({L.zahl(len(e.aenderungen))})", f"Changed values ({L.zahl(len(e.aenderungen))})"),
+        T(f"Ausgeschlossene Zeilen ({L.zahl(len(e.ausgeschlossen))})", f"Excluded rows ({L.zahl(len(e.ausgeschlossen))})"),
+        T(f"Hinweise ({L.zahl(len(e.hinweise))})", f"Notes ({L.zahl(len(e.hinweise))})")])
+    with t1:
+        p = e.profil.copy()
+        p["feld"] = p.feld.map(_feld)
+        p["pflicht"] = p.pflicht.map({True: "✓", False: ""})
+        st.dataframe(p.rename(columns={
+            "feld": T("Feld", "Field"), "quellspalte": T("Spalte in der Datei", "Column in file"),
+            "typ": T("Typ", "Type"), "pflicht": T("Pflicht", "Required"), "leer": T("leer", "empty"),
+            "nicht_lesbar": T("nicht lesbar", "unreadable"), "geaendert": T("geändert", "changed"),
+            "hinweise": T("Hinweise", "notes"), "verschiedene_werte": T("verschiedene Werte", "distinct values"),
+            "beispiel": T("Beispiel", "example")}), hide_index=True, use_container_width=True)
+        st.caption(T("„leer“ und „nicht lesbar“ zählen in der Originaldatei, „geändert“ und „verschiedene Werte“ "
+                     "in den übernommenen Zeilen.",
+                     "“empty” and “unreadable” count in the original file, “changed” and “distinct values” in the "
+                     "kept rows."))
+    with t2:
+        a = e.aenderungen.copy()
+        f1, f2 = st.columns(2)
+        r_wahl = f1.multiselect(T("Regel", "Rule"), sorted(a.regel.unique()), format_func=_regel)
+        f_wahl = f2.multiselect(T("Feld", "Field"), sorted(a.feld.unique()), format_func=_feld)
+        if r_wahl:
+            a = a[a.regel.isin(r_wahl)]
+        if f_wahl:
+            a = a[a.feld.isin(f_wahl)]
+        a["regel"] = a.regel.map(_regel)
+        a["feld"] = a.feld.map(_feld)
+        st.dataframe(a.rename(columns={"quellzeile": T("Zeile", "Row"), "feld": T("Feld", "Field"),
+                                       "vorher": T("vorher", "before"), "nachher": T("nachher", "after"),
+                                       "regel": T("Regel", "Rule")}),
+                     hide_index=True, use_container_width=True, height=380)
+    with t3:
+        x = e.ausgeschlossen.copy()
+        if len(x):
+            x.insert(1, T("Grund", "Reason"), x.regel.map(_regel))
+            x["detail"] = x.detail.map(_feldliste)
+            x = x.drop(columns="regel").rename(columns={"quellzeile": T("Zeile", "Row"), "detail": T("Detail", "Detail")})
+        st.dataframe(x, hide_index=True, use_container_width=True, height=380)
+        st.caption(T("Mit allen Originalwerten. „= 123“ heißt: gleich wie Zeile 123.",
+                     "With all original values. “= 123” means: same as row 123."))
+    with t4:
+        h = e.hinweise.copy()
+        h["regel"] = h.regel.map(_regel)
+        h["feld"] = h.feld.map(_feld)
+        st.dataframe(h.rename(columns={"quellzeile": T("Zeile", "Row"), "feld": T("Feld", "Field"),
+                                       "wert": T("Wert", "Value"), "regel": T("Hinweis", "Note")}),
+                     hide_index=True, use_container_width=True, height=380)
+        st.caption(T("Hinweise sind keine Fehler. Die Zeilen bleiben im Cockpit; prüfe sie bei Bedarf in der Quelle.",
+                     "Notes are not errors. The rows stay in the cockpit; check them in the source if needed."))
+
+    # ---------------------------------------------------------- 4 Übernehmen und exportieren
+    st.subheader(T("4 · Ins Cockpit übernehmen", "4 · Load into the cockpit"))
+    if k["zeilen_uebernommen"] == 0:
+        st.error(T("Keine Zeile ist übrig geblieben.", "No row is left."))
+        return
+    if k["zeilen_ausgeschlossen"] / max(k["zeilen_gelesen"], 1) > 0.05:
+        st.warning(T("Mehr als 5 % der Zeilen sind ausgeschlossen. Prüfe Zuordnung und Datumsformat, bevor du "
+                     "übernimmst.", "More than 5% of rows are excluded. Check mapping and date format before loading."))
+    standard = "Unicorn" if name == UEBUNG_DATEI.name else Path(name).stem.replace("_", " ")[:30]
+    firma = st.text_input(T("Name der Firma im Cockpit", "Company name in the cockpit"), standard, max_chars=30)
+    geprueft = st.checkbox(T("Ich habe ausgeschlossene Zeilen und Hinweise angesehen.",
+                             "I have looked at excluded rows and notes."))
+    if st.button(T("✅ Ins Cockpit übernehmen", "✅ Load into the cockpit"), type="primary", disabled=not geprueft):
+        with st.spinner(T("Baue die Cockpit-Tabellen …", "Building the cockpit tables …")):
+            try:
+                d, tab = A.cockpit_daten(BR.als_rohexport(e), name=firma.strip() or standard)
+                L.stichtage(d)[-1]
+                puffer = io.BytesIO()
+                Q.exportiere_excel({n: tab[n] for n in Q.TABELLEN}, puffer)
+                ss.upload_xlsx = puffer.getvalue()
+                ss.upload_zip = BR.pruefpaket(e, name, inhalt, tab, _bericht(e, name))
+                ss.upload_sqlite = SQL.als_sqlite(tab)          # für „SQL hinter diesen Zahlen“
+            except Exception as ex:  # noqa: BLE001
+                st.error(T("Das Cockpit kann mit diesen Daten nicht rechnen. Es braucht mindestens zwei "
+                           "Kalenderjahre (Plan = Vorjahr + Wachstum). ",
+                           "The cockpit cannot work with this data. It needs at least two calendar years "
+                           "(plan = prior year + growth). ") + f"({type(ex).__name__}: {ex})")
+                return
+        ss.upload_daten, ss.upload_tab, ss.upload_name = d, tab, name
+        ss.upload_ergebnis = e
+        # Cache-Schlüssel aus dem Inhalt: gleiche Daten -> gleiche Ergebnisse, nie die Daten einer anderen Sitzung
+        ss.upload_neu = BR._sha(inhalt + repr(lauf).encode() + d.name.encode())[:16]
+        ss.quelle_s = "upload"
+        ss.stichtag_s = L.stichtage(d)[-1]
+        ss.toast_aufb = T("Übernommen. Das Cockpit rechnet jetzt mit der aufbereiteten Datei.",
+                          "Loaded. The cockpit now runs on the prepared file.")
+        st.rerun()
+    if msg := ss.pop("toast_aufb", None):
+        st.success(msg)
+
+    if ss.get("upload_ergebnis") is e:
+        st.caption(T("Diese Daten sind übernommen. Wechsel jederzeit in der Seitenleiste unter „Datenquelle“ "
+                     "zurück zur SQLite-Datei.",
+                     "This data is loaded. Switch back to the SQLite file any time under “Data source” in the sidebar."))
+        try:
+            vergleich = Q.abgleich({n: getattr(ss.upload_daten, Q.FELD[n]) for n in Q.TABELLEN}, daten_sqlite())
+            with st.expander(T("Abgleich mit der SQLite-Datei", "Check against the SQLite file")):
+                st.table(vergleich.set_index("Tabelle"))
+                st.caption(T("Bei der Übungsdatei sind alle Zahlen identisch. Nur Produktnamen unterscheiden sich, "
+                             "weil doppelte und geschützte Leerzeichen zusammengefasst wurden.",
+                             "With the practice file all numbers are identical. Only product names differ because "
+                             "double and non-breaking spaces were collapsed."))
+        except Exception:  # noqa: BLE001 – ohne SQLite-Datei kein Abgleich
+            pass
+        x1, x2, x3 = st.columns(3)
+        x1.download_button(T("📦 Prüfpaket (ZIP)", "📦 Audit package (ZIP)"), ss.upload_zip,
+                           f"{Path(name).stem}_pruefpaket.zip", "application/zip", use_container_width=True)
+        x2.download_button(T("📊 Excel für Power BI", "📊 Excel for Power BI"), ss.upload_xlsx,
+                           f"{Path(name).stem}_cockpit_powerbi.xlsx",
+                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+        x3.download_button(T("📄 Bereinigte Positionen (CSV)", "📄 Cleaned lines (CSV)"),
+                           BR.als_csv(e.sauber),
+                           f"{Path(name).stem}_bereinigt.csv", "text/csv", use_container_width=True)
+        st.caption(T("Das Prüfpaket enthält bereinigte Daten, ausgeschlossene Zeilen, Änderungsprotokoll, Hinweise, "
+                     "Qualitätsprofil, einen Bericht und ein Manifest mit SHA-256-Prüfsumme je Datei.",
+                     "The audit package holds cleaned data, excluded rows, change log, notes, quality profile, a "
+                     "report and a manifest with a SHA-256 checksum per file."))
+
+
+@st.cache_data(show_spinner=False)
+def daten_sqlite():
+    return {n: getattr(L.lade_daten(), Q.FELD[n]) for n in Q.TABELLEN}
+
+
+def _bericht(e, name: str) -> str:
+    k = e.kennzahlen
+    von, bis = k["zeitraum"]
+    zeilen = [f"# {T('Datenaufbereitung', 'Data preparation')} · {name}", "",
+              f"- {T('Zeilen gelesen', 'Rows read')}: {L.zahl(k['zeilen_gelesen'])}",
+              f"- {T('übernommen', 'kept')}: {L.zahl(k['zeilen_uebernommen'])}",
+              f"- {T('ausgeschlossen', 'excluded')}: {L.zahl(k['zeilen_ausgeschlossen'])}",
+              f"- {T('Werte vereinheitlicht', 'Values standardised')}: {L.zahl(k['werte_geaendert'])}",
+              f"- {T('Werte aufgefüllt', 'Values filled in')}: 0",
+              f"- {T('Zeitraum', 'Period')}: {L.datum(von)}–{L.datum(bis)}",
+              f"- {T('Umsatz', 'Sales')}: {L.geld(k['umsatz'])} · DB I: {L.geld(k['db1'])}", "",
+              f"## {T('Regeln', 'Rules')}", "", f"| {T('Regel', 'Rule')} | {T('Anzahl', 'Count')} |", "|---|---:|"]
+    zeilen += [f"| {r.regel} {_regel(r.regel)} | {L.zahl(r.anzahl)} |" for r in e.regel_uebersicht().itertuples()]
+    zeilen += ["", T("Plan, Fixkosten und Zahlungen im Cockpit sind simuliert (siehe daten_dokumentation.md).",
+                     "Plan, fixed costs and payments in the cockpit are simulated (see daten_dokumentation.md).")]
+    return "\n".join(zeilen)
+
+
 BERATER_SICHT = modus == "extern" and ROLLE == "berater"
 SEITE_UEBERBLICK = st.Page(ueberblick, title=T("Überblick", "Overview"), icon="🧭", default=not BERATER_SICHT,
                            url_path="ueberblick")
@@ -1280,16 +1650,19 @@ steuern = [
             + ("" if ki.schluessel() else T(" (Beispiele)", " (examples)")), icon="💬", url_path="ki"),
     st.Page(briefing, title=T("Montags-Briefing", "Monday briefing"), icon="✉️", url_path="briefing"),
 ]
-G_LAGE, G_STEUERN = T("Lage", "Status"), T("Steuern", "Act")
+G_LAGE, G_STEUERN, G_DATEN = T("Lage", "Status"), T("Steuern", "Act"), T("Daten", "Data")
+daten_seiten = {} if ROLLE == "mandant" else {G_DATEN: [
+    st.Page(aufbereitung, title=T("Daten aufbereiten", "Prepare data"), icon="🧹", url_path="aufbereitung")]}
 if BERATER_SICHT:
     seiten = st.navigation({
+        **daten_seiten,
         T("Berater", "Advisor"): [st.Page(mandanten_uebersicht, title=T("Mandanten-Übersicht", "Client overview"),
                                           icon="🗂️", default=True, url_path="mandanten")],
         f"{G_LAGE} · {D_.name}": lage,
         G_STEUERN: steuern,
     })
 else:
-    seiten = st.navigation({G_LAGE: lage, G_STEUERN: steuern})
+    seiten = st.navigation({**daten_seiten, G_LAGE: lage, G_STEUERN: steuern})
 try:
     seiten.run()
 except Exception as e:  # noqa: BLE001
