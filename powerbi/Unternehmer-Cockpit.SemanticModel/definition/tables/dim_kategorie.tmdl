@@ -1,0 +1,24 @@
+table dim_kategorie
+	lineageTag: 9ccc928e-4935-5732-a669-14958d8fc79c
+
+	column kategorie
+		dataType: string
+		lineageTag: e2f2c615-7278-5f34-9465-10f0ae61c290
+		summarizeBy: none
+		sourceColumn: kategorie
+
+		annotation SummarizationSetBy = User
+
+	partition dim_kategorie = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="dim_kategorie",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"kategorie", type text}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

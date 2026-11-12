@@ -18,6 +18,7 @@ import aufbau as A
 import bereinigung as BR
 import logik as L
 import sql_abfragen as SQL
+import sternschema as ST
 import diagramme as D
 import ki
 import massnahmen as M
@@ -341,15 +342,22 @@ def startseite(zug: dict):
                  "Project by Denise Tirrel · All company and customer data are fictional."))
 
 
-ROLLEN_TEXT = {"berater": ("Berater", "Advisor"), "inhaber": ("Inhaber", "Owner"), "mandant": ("Mandant", "Client")}
+SEITEN_PFADE = ["ueberblick", "plan_ist", "liquiditaet", "benchmark", "was_waere_wenn", "fruehwarnung",
+                "massnahmen", "ki", "briefing", "aufbereitung", "mandanten"]   # url_path aller Seiten unten
+ROLLEN_TEXT = {"berater":("Berater", "Advisor"), "inhaber": ("Inhaber", "Owner"), "mandant": ("Mandant", "Client")}
 _zug = Z.laden()
 if not _zug["nutzer"]:
     NUTZER = {"name": "ohne Anmeldung", "rolle": "berater", "mandant": None}   # keine zugaenge.json: offen wie bisher
 elif ss.get("nutzer"):
     NUTZER = ss.nutzer
 else:
-    # eigene, versteckte Navigation: sonst bleibt das Seitenmenü der letzten Sitzung stehen
-    st.navigation([st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon="🧭", url_path="start")],
+    # eigene, versteckte Navigation: sonst bleibt das Seitenmenü der letzten Sitzung stehen.
+    # Alle Seitenadressen zeigen vor dem Login die Startseite (sonst meldet Streamlit "Page not found",
+    # wenn jemand z. B. /aufbereitung neu lädt); nach dem Login öffnet sich die aufgerufene Seite.
+    st.navigation([st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon="🧭", url_path="start",
+                           default=True)]
+                  + [st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon="🧭", url_path=pfad)
+                     for pfad in SEITEN_PFADE],
                   position="hidden").run()
     st.stop()
 ROLLE = NUTZER["rolle"]
@@ -1595,9 +1603,9 @@ def aufbereitung():
                              "double and non-breaking spaces were collapsed."))
         except Exception:  # noqa: BLE001 – ohne SQLite-Datei kein Abgleich
             pass
-        excel, paket, csv = _download_bauer(ss.setdefault("upload_dateien", {}), e, name, inhalt,
-                                            ss.upload_tab, _bericht(e, name))
-        x1, x2, x3 = st.columns(3)
+        excel, paket, csv, stern = _download_bauer(ss.setdefault("upload_dateien", {}), e, name, inhalt,
+                                                   ss.upload_tab, _bericht(e, name))
+        x1, x2, x3, x4 = st.columns(4)
         x1.download_button(T("📦 Prüfpaket (ZIP)", "📦 Audit package (ZIP)"), paket,
                            f"{Path(name).stem}_pruefpaket.zip", "application/zip", on_click="ignore",
                            use_container_width=True)
@@ -1608,8 +1616,17 @@ def aufbereitung():
         x3.download_button(T("📄 Bereinigte Positionen (CSV)", "📄 Cleaned lines (CSV)"), csv,
                            f"{Path(name).stem}_bereinigt.csv", "text/csv", on_click="ignore",
                            use_container_width=True)
+        x4.download_button(T("⭐ Power-BI-Projekt (Sternschema)", "⭐ Power BI project (star schema)"), stern,
+                           f"{Path(name).stem}_powerbi_projekt.zip", "application/zip", on_click="ignore",
+                           use_container_width=True)
         st.caption(T("Die Dateien werden erst beim Klick erstellt; das Excel braucht ein paar Sekunden.",
                      "Files are built when you click; the Excel takes a few seconds."))
+        st.caption(T("Das Power-BI-Projekt ist ein Sternschema: 7 Dimensionen (mit Datumstabelle), 5 Faktentabellen, "
+                     "17 Beziehungen und fertige DAX-Kennzahlen. ZIP entpacken und die .pbip-Datei in Power BI "
+                     "Desktop öffnen; die Anleitung liegt bei.",
+                     "The Power BI project is a star schema: 7 dimensions (with a date table), 5 fact tables, "
+                     "17 relationships and ready-made DAX measures. Unzip and open the .pbip file in Power BI "
+                     "Desktop; instructions are included."))
         st.caption(T("Das Prüfpaket enthält bereinigte Daten, ausgeschlossene Zeilen, Änderungsprotokoll, Hinweise, "
                      "Qualitätsprofil, einen Bericht und ein Manifest mit SHA-256-Prüfsumme je Datei.",
                      "The audit package holds cleaned data, excluded rows, change log, notes, quality profile, a "
@@ -1644,7 +1661,15 @@ def _download_bauer(ablage: dict, e, name: str, inhalt: bytes, tab: dict, berich
             ablage["csv"] = BR.als_csv(e.sauber)
         return ablage["csv"]
 
-    return excel, paket, csv
+    def stern() -> bytes:
+        if "stern" not in ablage:
+            modell = ST.baue_stern(tab)
+            puffer = io.BytesIO()
+            ST.exportiere_stern_excel(modell, puffer)
+            ablage["stern"] = ST.projekt_zip(modell, puffer.getvalue(), f"{Path(name).stem}_sternschema.xlsx")
+        return ablage["stern"]
+
+    return excel, paket, csv, stern
 
 
 def _bericht(e, name: str) -> str:

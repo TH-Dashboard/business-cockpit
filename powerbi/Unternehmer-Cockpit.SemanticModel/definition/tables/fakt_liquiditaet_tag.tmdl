@@ -1,0 +1,105 @@
+table fakt_liquiditaet_tag
+	lineageTag: 2c07a9ac-aad8-5b31-be1f-88101492266f
+
+	measure Kontostand = LASTNONBLANKVALUE ( dim_datum[datum], SUM ( fakt_liquiditaet_tag[kontostand] ) )
+		formatString: \$ #,0
+		displayFolder: Liquidität
+		lineageTag: 8c32a50e-9187-5e37-b423-3523547b7af5
+
+	measure Einzahlungen = SUM ( fakt_liquiditaet_tag[einzahlungen] )
+		formatString: \$ #,0
+		displayFolder: Liquidität
+		lineageTag: ef45ea73-888c-5d3b-b06c-1a6d0a64512e
+
+	measure Auszahlungen = SUM ( fakt_liquiditaet_tag[auszahlungen_ware] ) + SUM ( fakt_liquiditaet_tag[auszahlungen_versand] ) + SUM ( fakt_liquiditaet_tag[auszahlungen_fix] ) + SUM ( fakt_liquiditaet_tag[privatentnahme] )
+		formatString: \$ #,0
+		displayFolder: Liquidität
+		lineageTag: def94f7d-d7d9-50b4-b339-8626fabff8b2
+
+	column datum
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: 123a0ff1-5158-5830-9af4-e526ca01dce6
+		summarizeBy: none
+		sourceColumn: datum
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column einzahlungen
+		dataType: int64
+		formatString: 0
+		lineageTag: d13c6182-e23c-50e6-b0dc-491c1c5d7eee
+		summarizeBy: sum
+		sourceColumn: einzahlungen
+
+		annotation SummarizationSetBy = Automatic
+
+	column auszahlungen_ware
+		dataType: double
+		formatString: #,0.00
+		lineageTag: dc32edf4-02ae-5822-8d28-ae19ed593360
+		summarizeBy: sum
+		sourceColumn: auszahlungen_ware
+
+		annotation SummarizationSetBy = Automatic
+
+	column auszahlungen_versand
+		dataType: double
+		formatString: #,0.00
+		lineageTag: f0595ed7-c8a0-5d1c-a26a-125b739da815
+		summarizeBy: sum
+		sourceColumn: auszahlungen_versand
+
+		annotation SummarizationSetBy = Automatic
+
+	column auszahlungen_fix
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 52a18798-d8a7-5046-a4fe-07ce74d80e4c
+		summarizeBy: sum
+		sourceColumn: auszahlungen_fix
+
+		annotation SummarizationSetBy = Automatic
+
+	column privatentnahme
+		dataType: int64
+		formatString: 0
+		lineageTag: 8588892c-b39e-5ba5-95e7-df108cc943b1
+		summarizeBy: sum
+		sourceColumn: privatentnahme
+
+		annotation SummarizationSetBy = Automatic
+
+	column saldo_tag
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 002de85e-8297-54d1-89fb-1639dbc1a196
+		summarizeBy: sum
+		sourceColumn: saldo_tag
+
+		annotation SummarizationSetBy = Automatic
+
+	column kontostand
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 86f4523a-5dd6-5180-8c93-176b0b86308d
+		summarizeBy: sum
+		sourceColumn: kontostand
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fakt_liquiditaet_tag = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="fakt_liquiditaet_tag",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"datum", type date}, {"einzahlungen", Int64.Type}, {"auszahlungen_ware", type number}, {"auszahlungen_versand", type number}, {"auszahlungen_fix", type number}, {"privatentnahme", Int64.Type}, {"saldo_tag", type number}, {"kontostand", type number}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

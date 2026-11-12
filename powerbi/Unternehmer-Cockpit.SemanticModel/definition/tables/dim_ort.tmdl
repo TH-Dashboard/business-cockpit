@@ -1,0 +1,49 @@
+table dim_ort
+	lineageTag: f640efb0-89d3-56a0-9ba9-98f94744f64f
+
+	column ort_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 730fe6a3-5479-503e-adb7-0fb20b7ff860
+		summarizeBy: none
+		sourceColumn: ort_id
+
+		annotation SummarizationSetBy = User
+
+	column stadt
+		dataType: string
+		lineageTag: 981a37df-f9bc-5709-be72-c08dbfd9bfe8
+		summarizeBy: none
+		sourceColumn: stadt
+
+		annotation SummarizationSetBy = User
+
+	column bundesstaat
+		dataType: string
+		lineageTag: 19d36575-9081-53b3-9611-1364ac76b98b
+		summarizeBy: none
+		sourceColumn: bundesstaat
+
+		annotation SummarizationSetBy = User
+
+	column region
+		dataType: string
+		lineageTag: 0f8b6fcd-17a5-5d96-b64f-a844045608ac
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = User
+
+	partition dim_ort = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="dim_ort",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"ort_id", Int64.Type}, {"stadt", type text}, {"bundesstaat", type text}, {"region", type text}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

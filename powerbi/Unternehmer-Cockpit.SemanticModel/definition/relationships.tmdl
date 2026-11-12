@@ -1,0 +1,71 @@
+relationship 8f26f21c-6a4f-5785-87c6-987e50d23cc2
+	fromColumn: fakt_umsatz.auftragsdatum
+	toColumn: dim_datum.datum
+
+relationship 323d95c0-4c5d-52b7-ad3e-7e35e68ce19f
+	isActive: false
+	fromColumn: fakt_umsatz.versanddatum
+	toColumn: dim_datum.datum
+
+relationship 5e8f0176-902e-5e95-ab0d-a0e5d3ef1743
+	fromColumn: fakt_umsatz.kunde_id
+	toColumn: dim_kunde.kunde_id
+
+relationship 1751f9b0-0123-567c-bc75-f7ba941aa215
+	fromColumn: fakt_umsatz.produkt_id
+	toColumn: dim_produkt.produkt_id
+
+relationship d6bef5d8-93f4-51d8-a10e-20cae98a1788
+	fromColumn: fakt_umsatz.ort_id
+	toColumn: dim_ort.ort_id
+
+relationship a645e594-4408-5d2e-90fa-b4babed6cefa
+	fromColumn: dim_produkt.kategorie
+	toColumn: dim_kategorie.kategorie
+
+relationship 20b0488a-5d6e-5c4a-a6b7-28b5c2b64660
+	fromColumn: dim_ort.region
+	toColumn: dim_region.region
+
+relationship 4e262e0c-8daf-5467-b1cf-bde942b0bdb7
+	fromColumn: fakt_plan.monat
+	toColumn: dim_datum.datum
+
+relationship 98488d4e-ea9b-57ea-949c-5fa4c346396a
+	fromColumn: fakt_plan.region
+	toColumn: dim_region.region
+
+relationship f2fcf845-54d5-5abb-a857-c02f48ba5060
+	fromColumn: fakt_plan.kategorie
+	toColumn: dim_kategorie.kategorie
+
+relationship f54b9fb0-e586-5c05-9ee0-f51de98fd4df
+	fromColumn: fakt_fixkosten.monat
+	toColumn: dim_datum.datum
+
+relationship ea812a5c-533c-51fb-ac6d-1e95fcac4606
+	fromColumn: fakt_fixkosten.kostenart
+	toColumn: dim_kostenart.kostenart
+
+relationship 37508962-d39b-5030-87f0-21439c02d75f
+	fromColumn: fakt_rechnungen.rechnungsdatum
+	toColumn: dim_datum.datum
+
+relationship 45de4523-4162-520f-95dd-6c6bc35ac841
+	isActive: false
+	fromColumn: fakt_rechnungen.faellig_am
+	toColumn: dim_datum.datum
+
+relationship 80b8d25a-9931-5583-9737-ee28ca9de1f7
+	isActive: false
+	fromColumn: fakt_rechnungen.bezahlt_am
+	toColumn: dim_datum.datum
+
+relationship e944cd38-6b3f-5e45-aa23-5b7d04bd882a
+	fromColumn: fakt_rechnungen.kunde_id
+	toColumn: dim_kunde.kunde_id
+
+relationship e1584f13-2ec7-5244-a37a-487f8bd08a47
+	fromColumn: fakt_liquiditaet_tag.datum
+	toColumn: dim_datum.datum
+

@@ -1,0 +1,87 @@
+table fakt_plan
+	lineageTag: bf891d2e-23d8-59b0-a274-f43f60a77d39
+
+	measure 'Umsatz Plan' = SUM ( fakt_plan[umsatz_plan] )
+		formatString: \$ #,0
+		displayFolder: Plan-Ist
+		lineageTag: 26d740e4-4da1-5bd3-89ef-676eac3b8242
+
+	measure 'DB I Plan' = SUM ( fakt_plan[db1_plan] )
+		formatString: \$ #,0
+		displayFolder: Plan-Ist
+		lineageTag: a1c056d6-95cd-58cf-b42c-ebdb1d92e0c0
+
+	measure 'Umsatz Abweichung %' =
+			VAR p = [Umsatz Plan]
+			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [Umsatz] - p, p ) )
+		formatString: 0.0 %
+		displayFolder: Plan-Ist
+		lineageTag: ad11286e-f4a3-5632-8e6c-d46cf04404d8
+
+	measure 'DB I Abweichung %' =
+			VAR p = [DB I Plan]
+			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [DB I] - p, p ) )
+		formatString: 0.0 %
+		displayFolder: Plan-Ist
+		lineageTag: 657a5335-e93d-5434-879f-0e3d324b32f0
+
+	column monat
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: f4471d93-f8c6-5471-abac-15bca82f7db7
+		summarizeBy: none
+		sourceColumn: monat
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column region
+		dataType: string
+		isHidden
+		lineageTag: 6d33fd4f-14fd-5b1b-9da0-d57aca51ca77
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = User
+
+	column kategorie
+		dataType: string
+		isHidden
+		lineageTag: 78b36123-aa89-5756-bfa6-c0fd1fbadbb3
+		summarizeBy: none
+		sourceColumn: kategorie
+
+		annotation SummarizationSetBy = User
+
+	column umsatz_plan
+		dataType: double
+		formatString: #,0.00
+		lineageTag: aa049cdd-3f3b-5ef2-903c-267b7ae9e140
+		summarizeBy: sum
+		sourceColumn: umsatz_plan
+
+		annotation SummarizationSetBy = Automatic
+
+	column db1_plan
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 5c13e121-7969-51e1-aab3-c2f98f7d8948
+		summarizeBy: sum
+		sourceColumn: db1_plan
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fakt_plan = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="fakt_plan",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"monat", type date}, {"region", type text}, {"kategorie", type text}, {"umsatz_plan", type number}, {"db1_plan", type number}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

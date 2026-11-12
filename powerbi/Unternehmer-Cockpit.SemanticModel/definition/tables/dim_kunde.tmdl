@@ -1,0 +1,57 @@
+table dim_kunde
+	lineageTag: 55aa0241-2e4c-5dbd-b8c0-0bfbc48625c6
+
+	column kunde_id
+		dataType: int64
+		formatString: 0
+		lineageTag: b81e95cb-971b-56a6-a6f5-2fde2105bac0
+		summarizeBy: none
+		sourceColumn: kunde_id
+
+		annotation SummarizationSetBy = User
+
+	column kunde
+		dataType: string
+		lineageTag: 657cd1ed-26d8-535b-a5ca-2917333b5de1
+		summarizeBy: none
+		sourceColumn: kunde
+
+		annotation SummarizationSetBy = User
+
+	column segment
+		dataType: string
+		lineageTag: 084d436b-1daf-5a74-83ac-a2c6af2fddd8
+		summarizeBy: none
+		sourceColumn: segment
+
+		annotation SummarizationSetBy = User
+
+	column hauptregion
+		dataType: string
+		lineageTag: 66b25966-ca64-5ddf-b749-847c7b6be7e5
+		summarizeBy: none
+		sourceColumn: hauptregion
+
+		annotation SummarizationSetBy = User
+
+	column zahlungsverhalten_sim
+		dataType: string
+		lineageTag: 7bbb3a88-581a-5ee3-99f4-388d37f00d3a
+		summarizeBy: none
+		sourceColumn: zahlungsverhalten_sim
+
+		annotation SummarizationSetBy = User
+
+	partition dim_kunde = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="dim_kunde",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"kunde_id", Int64.Type}, {"kunde", type text}, {"segment", type text}, {"hauptregion", type text}, {"zahlungsverhalten_sim", type text}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

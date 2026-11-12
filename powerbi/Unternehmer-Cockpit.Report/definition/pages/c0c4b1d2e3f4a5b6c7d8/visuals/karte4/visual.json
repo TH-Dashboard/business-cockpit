@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "karte4",
+  "position": {
+    "x": 785,
+    "y": 70,
+    "z": 3000,
+    "height": 120,
+    "width": 240,
+    "tabOrder": 3000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_fixkosten"
+                    }
+                  },
+                  "Property": "EBIT"
+                }
+              },
+              "queryRef": "fakt_fixkosten.EBIT",
+              "nativeQueryRef": "EBIT"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
