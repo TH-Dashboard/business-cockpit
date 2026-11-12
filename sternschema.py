@@ -380,10 +380,6 @@ def projekt_dateien(stern: dict[str, pd.DataFrame], excel_pfad: str = EXCEL_STAN
         f"{sm}/definition.pbism": _json({
             "$schema": f"{SCHEMA}/item/semanticModel/definitionProperties/1.0.0/schema.json",
             "version": "4.0", "settings": {}}),
-        f"{sm}/.platform": _json({
-            "$schema": f"{SCHEMA}/gitIntegration/platformProperties/2.0.0/schema.json",
-            "metadata": {"type": "SemanticModel", "displayName": name},
-            "config": {"version": "2.0", "logicalId": _id("sm", name)}}),
         f"{sm}/definition/database.tmdl": "database\n\tcompatibilityLevel: 1567\n\n",
         f"{sm}/definition/model.tmdl": _model_tmdl(list(stern)),
         f"{sm}/definition/expressions.tmdl": _expressions_tmdl(excel_pfad),
@@ -391,10 +387,6 @@ def projekt_dateien(stern: dict[str, pd.DataFrame], excel_pfad: str = EXCEL_STAN
         f"{rp}/definition.pbir": _json({
             "$schema": f"{SCHEMA}/item/report/definitionProperties/2.0.0/schema.json", "version": "4.0",
             "datasetReference": {"byPath": {"path": f"../{sm}"}}}),
-        f"{rp}/.platform": _json({
-            "$schema": f"{SCHEMA}/gitIntegration/platformProperties/2.0.0/schema.json",
-            "metadata": {"type": "Report", "displayName": name},
-            "config": {"version": "2.0", "logicalId": _id("rp", name)}}),
         f"{rp}/definition/version.json": _json({
             "$schema": f"{SCHEMA}/item/report/definition/versionMetadata/1.0.0/schema.json", "version": "2.0.0"}),
         f"{rp}/definition/report.json": _json({
