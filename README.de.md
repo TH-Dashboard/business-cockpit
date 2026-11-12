@@ -2,6 +2,8 @@
 
 [🇬🇧 English](README.md) · 🇩🇪 Deutsch
 
+Ein Projekt des Studios **[TH-Dashboard](https://github.com/TH-Dashboard)** · Repository: [TH-Dashboard/business-cockpit](https://github.com/TH-Dashboard/business-cockpit)
+
 [![Tests](../../actions/workflows/tests.yml/badge.svg)](../../actions/workflows/tests.yml)
 
 ## Der Umsatz liegt über Plan. Warum wird trotzdem das Geld knapp?
@@ -334,7 +336,7 @@ beschränkter Zugriff.
 
 ## Gründer
 
-Das Cockpit ist ein gemeinsames Projekt von zwei Data Analysts:
+Das Cockpit ist ein gemeinsames Projekt von zwei Data Analysts unter dem Studionamen **[TH-Dashboard](https://github.com/TH-Dashboard)**:
 
 | Gründer | Beitrag |
 |---|---|
