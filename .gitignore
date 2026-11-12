@@ -13,3 +13,6 @@ einstellungen.json
 # Editor
 *.code-workspace
 .vscode/
+
+# erzeugt mit python sternschema.py
+daten/unicorn_sternschema.xlsx
