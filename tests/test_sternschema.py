@@ -94,7 +94,9 @@ def test_beziehung_passt(stern, von_tab, von_sp, zu_tab, zu_sp, aktiv, _h):
     eins, viele = stern[zu_tab][zu_sp], stern[von_tab][von_sp]
     assert eins.is_unique, f"{zu_tab}.{zu_sp} ist nicht eindeutig"
     assert eins.notna().all()
-    fehlend = set(viele.dropna()) - set(eins)
+    leer = int(viele.isna().sum())
+    assert not leer, f"{von_tab}.{von_sp}: {leer} leere Schlüssel, Power BI zeigt sonst \"(Blank)\" in {zu_tab}"
+    fehlend = set(viele) - set(eins)
     assert not fehlend, f"{von_tab}.{von_sp}: {len(fehlend)} Werte ohne Partner, z. B. {sorted(fehlend)[:3]}"
     assert S._typ(eins)[0] == S._typ(viele)[0]
 
@@ -180,6 +182,15 @@ def test_dax_verweise_existieren(dateien):
             assert spalte in modell[tab]["spalten"], f"{name}: {tab}[{spalte}] fehlt"
         for ref in re.findall(r"(?<![\w\]])\[([^\]]+)\]", dax):
             assert ref in kennzahlen, f"{name}: Kennzahl [{ref}] fehlt"
+
+
+def test_kennzahl_heisst_nicht_wie_eine_spalte(dateien):
+    """Power BI Desktop lehnt das Projekt ab, wenn eine Kennzahl wie eine Spalte heißt (Groß-/Kleinschreibung egal)."""
+    modell = _tmdl(dateien)
+    spalten = {s.lower() for t in modell.values() for s in t["spalten"]}
+    namen = [k.lower() for t in modell.values() for k in t["kennzahlen"]]
+    assert len(namen) == len(set(namen))
+    assert not spalten & set(namen), sorted(spalten & set(namen))
 
 
 def test_beziehungen_und_sortierung_im_tmdl(dateien):
