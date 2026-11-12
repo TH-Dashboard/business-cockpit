@@ -1336,7 +1336,7 @@ def aufbereitung():
         a, b = st.columns(2)
         if a.button(T("Übungsdatei verwenden", "Use practice file"), use_container_width=True):
             ss.aufb_datei = (UEBUNG_DATEI.name, UEBUNG_DATEI.read_bytes())
-        b.download_button(T("Übungsdatei laden", "Download practice file"), UEBUNG_DATEI.read_bytes(),
+        b.download_button(T("Übungsdatei herunterladen", "Download practice file"), UEBUNG_DATEI.read_bytes(),
                           UEBUNG_DATEI.name, "text/csv", use_container_width=True)
     if hoch is not None and ss.get("aufb_hoch_id") != hoch.file_id:      # neue Datei im Upload-Feld
         ss.aufb_hoch_id = hoch.file_id
@@ -1428,10 +1428,11 @@ def aufbereitung():
                                     "punkt": T("Punkt (1,234.50)", "point (1,234.50)")}.get)
     innen = c3.toggle(T("Doppelte Leerzeichen im Text zusammenfassen", "Collapse double spaces in text"), value=True)
     dubl = c3.toggle(T("Identische Zeilen entfernen", "Remove identical rows"), value=True)
-    faktor = c3.slider(T("Ausreißer-Grenze (×IQR, log)", "Outlier fence (×IQR, log)"), 1.0, 4.0, 1.5, 0.5,
-                       help=T("Tukey-Zaun auf logarithmierten Umsätzen und Mengen. Ausreißer bleiben drin und "
-                              "werden nur markiert.",
-                              "Tukey fence on logged sales and quantities. Outliers stay in and are only flagged."))
+    faktor = c3.select_slider(T("Ausreißer-Grenze (×IQR, log)", "Outlier fence (×IQR, log)"),
+                              [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0], 1.5, format_func=lambda v: L.zahl(v, 1),
+                              help=T("Tukey-Zaun auf logarithmierten Umsätzen und Mengen. Ausreißer bleiben drin und "
+                                     "werden nur markiert.",
+                                     "Tukey fence on logged sales and quantities. Outliers stay in and are only flagged."))
     if fehlt or doppelt:
         if fehlt:
             st.error(T("Bitte noch zuordnen: ", "Please map: ") + ", ".join(_feld(f) for f in fehlt))
@@ -1559,7 +1560,7 @@ def aufbereitung():
         with st.spinner(T("Baue die Cockpit-Tabellen …", "Building the cockpit tables …")):
             try:
                 d, tab = A.cockpit_daten(BR.als_rohexport(e), name=firma.strip() or standard)
-                L.stichtage(d)[-1]
+                _ = L.stichtage(d)[-1]                         # prüft nur, ob es einen Stichtag gibt (sonst Fehler)
                 puffer = io.BytesIO()
                 Q.exportiere_excel({n: tab[n] for n in Q.TABELLEN}, puffer)
                 ss.upload_xlsx = puffer.getvalue()
@@ -1590,7 +1591,7 @@ def aufbereitung():
         try:
             vergleich = Q.abgleich({n: getattr(ss.upload_daten, Q.FELD[n]) for n in Q.TABELLEN}, daten_sqlite())
             with st.expander(T("Abgleich mit der SQLite-Datei", "Check against the SQLite file")):
-                st.table(vergleich.set_index("Tabelle"))
+                st.table(vergleich.assign(Zeilen=vergleich["Zeilen"].map(L.zahl)).set_index("Tabelle"))
                 st.caption(T("Bei der Übungsdatei sind alle Zahlen identisch. Nur Produktnamen unterscheiden sich, "
                              "weil doppelte und geschützte Leerzeichen zusammengefasst wurden.",
                              "With the practice file all numbers are identical. Only product names differ because "
