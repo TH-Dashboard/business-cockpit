@@ -306,11 +306,9 @@ def _ist_standardzahl(s: str) -> bool:
 
 
 def _texte(s: pd.Series, innen: bool) -> pd.Series:
-    """Wie _text, aber für eine ganze Spalte auf einmal."""
-    t = s.astype(str).str.translate(_UNSICHTBAR)
-    if innen:
-        t = t.str.replace(r"[\s ]+", " ", regex=True)
-    return t.str.strip()
+    """Wie _text, für eine ganze Spalte."""
+    # bewusst je Wert mit Python-re: pandas' Arrow-Strings kennen bei \s keine geschützten Leerzeichen
+    return s.map(lambda v: _text(v, innen))
 
 
 def _haeufigste(schluessel: list, werte: list) -> dict:
