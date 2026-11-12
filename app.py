@@ -40,7 +40,7 @@ if st.query_params.get("versionen"):
         except PackageNotFoundError:
             return "–"
     st.code(f"python=={platform.python_version()}\n" + "\n".join(
-        f"{n}=={_ver(n)}" for n in ["streamlit", "pandas", "numpy", "matplotlib", "openpyxl", "altair", "pythonnet"]))
+        f"{n}=={_ver(n)}" for n in ["streamlit", "pandas", "numpy", "matplotlib", "openpyxl", "xlsxwriter", "altair", "pythonnet"]))
     st.stop()
 
 # Online-Demo (z. B. Streamlit Community Cloud): COCKPIT_DEMO=1 als Umgebungsvariable oder Secret.

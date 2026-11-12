@@ -218,3 +218,24 @@ def test_pruefpaket_uebernimmt_fertige_excel(ergebnis):
         assert z.read("01_bereinigt/cockpit_tabellen_powerbi.xlsx") == excel
         manifest = json.loads(z.read("manifest.json"))
     assert manifest["dateien"]["01_bereinigt/cockpit_tabellen_powerbi.xlsx"]["bytes"] == len(excel)
+
+
+def test_excel_export_rundreise():
+    # schneller xlsxwriter-Export: Typen und Lücken kommen unverändert zurück, Texte bleiben Texte
+    df = pd.DataFrame({
+        "datum": pd.to_datetime(["2024-01-31", None, "2024-03-01"]),
+        "anzahl": pd.array([1, None, 3], dtype="Int64"),
+        "betrag": [1.5, float("nan"), -2.25],
+        "aktiv": [True, False, True],
+        "text": ["=1+1", None, "https://x.de"],
+        "nummer": ["007", "12", "abc"],
+    })
+    puffer = io.BytesIO()
+    Q.exportiere_excel({"t": df, "leer": df.iloc[:0]}, puffer)
+    zurueck = pd.read_excel(io.BytesIO(puffer.getvalue()), sheet_name=None, dtype={"nummer": str})
+    t = zurueck["t"]
+    assert list(t.columns) == list(df.columns) and len(zurueck["leer"]) == 0
+    assert t.datum.isna().tolist() == [False, True, False] and t.datum.iloc[0] == pd.Timestamp("2024-01-31")
+    assert t.anzahl.isna().tolist() == [False, True, False] and t.anzahl.iloc[2] == 3
+    assert t.betrag.iloc[2] == -2.25 and t.aktiv.tolist() == [True, False, True]
+    assert t.text.iloc[0] == "'=1+1" and t.text.iloc[2] == "https://x.de" and t.nummer.tolist() == ["007", "12", "abc"]
