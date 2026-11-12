@@ -13,7 +13,7 @@ table fakt_plan
 
 	measure 'Umsatz Abweichung %' =
 			VAR p = [Umsatz Plan]
-			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [Umsatz] - p, p ) )
+			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [Umsatz gesamt] - p, p ) )
 		formatString: 0.0 %
 		displayFolder: Plan-Ist
 		lineageTag: ad11286e-f4a3-5632-8e6c-d46cf04404d8
