@@ -164,9 +164,18 @@ upload real customer or company data and accepts 20 MB at most.
 The data is a public practice dataset plus simulated values, no real personal or customer data. When working with
 real data, I follow GDPR principles: anonymisation, data minimisation and restricted access.
 
+## Founders
+
+The cockpit is a joint project of two data analysts:
+
+| Founder | Contribution |
+|---|---|
+| **Fanuel Hintza** · [GitHub](https://github.com/fanuel-hintza) | Step 1, data cleaning: concept and Power BI template (CFO Data Engine) that the **🧹 Prepare data** page is built on |
+| **Denise Tirrel** · [LinkedIn](https://www.linkedin.com/in/denise-tirrel/) · [GitHub](https://github.com/denisetirrel-ops) | Step 2, the cockpit: metrics, pages, SQL, early warning; Streamlit implementation of the cleaning step, tests and deployment |
+
 ## Contact and licence
 
-Project by **Denise Tirrel** · data analytics portfolio · [LinkedIn](https://www.linkedin.com/in/denise-tirrel/) · [GitHub](https://github.com/denisetirrel-ops)
+Contact via the founders' profiles above.
 
 Code under the [MIT licence](LICENSE). The sales data is the fictional Tableau "Sample Superstore" dataset
 (as "Unicorn" in the Masterschool course); plan, cost and payment data are simulated.
