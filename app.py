@@ -1561,11 +1561,8 @@ def aufbereitung():
             try:
                 d, tab = A.cockpit_daten(BR.als_rohexport(e), name=firma.strip() or standard)
                 _ = L.stichtage(d)[-1]                         # prüft nur, ob es einen Stichtag gibt (sonst Fehler)
-                puffer = io.BytesIO()
-                Q.exportiere_excel({n: tab[n] for n in Q.TABELLEN}, puffer)
-                ss.upload_xlsx = puffer.getvalue()
-                ss.upload_zip = BR.pruefpaket(e, name, inhalt, tab, _bericht(e, name), excel=ss.upload_xlsx)
                 ss.upload_sqlite = SQL.als_sqlite(tab)          # für „SQL hinter diesen Zahlen“
+                ss.upload_dateien = {}                          # Downloads werden erst beim Klick gebaut
             except Exception as ex:  # noqa: BLE001
                 st.error(T("Das Cockpit kann mit diesen Daten nicht rechnen. Es braucht mindestens zwei "
                            "Kalenderjahre (Plan = Vorjahr + Wachstum). ",
@@ -1598,15 +1595,21 @@ def aufbereitung():
                              "double and non-breaking spaces were collapsed."))
         except Exception:  # noqa: BLE001 – ohne SQLite-Datei kein Abgleich
             pass
+        excel, paket, csv = _download_bauer(ss.setdefault("upload_dateien", {}), e, name, inhalt,
+                                            ss.upload_tab, _bericht(e, name))
         x1, x2, x3 = st.columns(3)
-        x1.download_button(T("📦 Prüfpaket (ZIP)", "📦 Audit package (ZIP)"), ss.upload_zip,
-                           f"{Path(name).stem}_pruefpaket.zip", "application/zip", use_container_width=True)
-        x2.download_button(T("📊 Excel für Power BI", "📊 Excel for Power BI"), ss.upload_xlsx,
+        x1.download_button(T("📦 Prüfpaket (ZIP)", "📦 Audit package (ZIP)"), paket,
+                           f"{Path(name).stem}_pruefpaket.zip", "application/zip", on_click="ignore",
+                           use_container_width=True)
+        x2.download_button(T("📊 Excel für Power BI", "📊 Excel for Power BI"), excel,
                            f"{Path(name).stem}_cockpit_powerbi.xlsx",
-                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
-        x3.download_button(T("📄 Bereinigte Positionen (CSV)", "📄 Cleaned lines (CSV)"),
-                           BR.als_csv(e.sauber),
-                           f"{Path(name).stem}_bereinigt.csv", "text/csv", use_container_width=True)
+                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", on_click="ignore",
+                           use_container_width=True)
+        x3.download_button(T("📄 Bereinigte Positionen (CSV)", "📄 Cleaned lines (CSV)"), csv,
+                           f"{Path(name).stem}_bereinigt.csv", "text/csv", on_click="ignore",
+                           use_container_width=True)
+        st.caption(T("Die Dateien werden erst beim Klick erstellt; das Excel braucht ein paar Sekunden.",
+                     "Files are built when you click; the Excel takes a few seconds."))
         st.caption(T("Das Prüfpaket enthält bereinigte Daten, ausgeschlossene Zeilen, Änderungsprotokoll, Hinweise, "
                      "Qualitätsprofil, einen Bericht und ein Manifest mit SHA-256-Prüfsumme je Datei.",
                      "The audit package holds cleaned data, excluded rows, change log, notes, quality profile, a "
@@ -1616,6 +1619,32 @@ def aufbereitung():
 @st.cache_data(show_spinner=False)
 def daten_sqlite():
     return {n: getattr(L.lade_daten(), Q.FELD[n]) for n in Q.TABELLEN}
+
+
+def _download_bauer(ablage: dict, e, name: str, inhalt: bytes, tab: dict, bericht: str):
+    """Drei Funktionen für st.download_button, die ihre Datei erst beim Klick bauen und in `ablage` merken.
+
+    Streamlit ruft sie in einem eigenen Thread auf; darum alles Nötige hier festhalten statt Session-State lesen.
+    """
+    def excel() -> bytes:
+        if "xlsx" not in ablage:
+            puffer = io.BytesIO()
+            Q.exportiere_excel({n: tab[n] for n in Q.TABELLEN}, puffer)
+            ablage["xlsx"] = puffer.getvalue()
+        return ablage["xlsx"]
+
+    def paket() -> bytes:
+        schluessel = ("zip", bericht)                   # Bericht hängt von der Sprache ab
+        if schluessel not in ablage:
+            ablage[schluessel] = BR.pruefpaket(e, name, inhalt, tab, bericht, excel=excel())
+        return ablage[schluessel]
+
+    def csv() -> bytes:
+        if "csv" not in ablage:
+            ablage["csv"] = BR.als_csv(e.sauber)
+        return ablage["csv"]
+
+    return excel, paket, csv
 
 
 def _bericht(e, name: str) -> str:
