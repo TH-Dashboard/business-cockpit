@@ -1564,7 +1564,7 @@ def aufbereitung():
                 puffer = io.BytesIO()
                 Q.exportiere_excel({n: tab[n] for n in Q.TABELLEN}, puffer)
                 ss.upload_xlsx = puffer.getvalue()
-                ss.upload_zip = BR.pruefpaket(e, name, inhalt, tab, _bericht(e, name))
+                ss.upload_zip = BR.pruefpaket(e, name, inhalt, tab, _bericht(e, name), excel=ss.upload_xlsx)
                 ss.upload_sqlite = SQL.als_sqlite(tab)          # für „SQL hinter diesen Zahlen“
             except Exception as ex:  # noqa: BLE001
                 st.error(T("Das Cockpit kann mit diesen Daten nicht rechnen. Es braucht mindestens zwei "
