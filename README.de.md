@@ -55,7 +55,7 @@ Jede Kennzahl ist in [`docs/kennzahlen.md`](docs/kennzahlen.md) definiert, dazu,
 ### Sternschema für Power BI
 
 Für Power BI baut die App aus denselben Daten ein Sternschema: 5 Faktentabellen mit Schlüsseln und Beträgen,
-7 Dimensionen (Kalender `dim_datum`, Kunde, Produkt, Kategorie, Ort, Region, Kostenart) und 17 Beziehungen.
+7 Dimensionen (Kalender `dim_datum`, Kunde, Produkt, Kategorie, Ort, Region, Kostenart) und 16 Beziehungen.
 Plan und Ist treffen sich über gemeinsame Dimensionen (Datum, Region, Kategorie), nie Faktentabelle an Faktentabelle.
 Das fertige Power-BI-Projekt liegt in [`powerbi/`](powerbi/) als Textdateien: Modell in TMDL mit markierter
 Datumstabelle, Beziehungen und 26 DAX-Kennzahlen (Umsatz, DB I, Marge, EBIT, Plan-Abweichung, Vorjahr, YTD, offene

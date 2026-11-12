@@ -55,7 +55,7 @@ which are simulated.
 ### Star schema for Power BI
 
 For Power BI the app turns the same data into a star schema: 5 fact tables with keys and amounts, 7 dimensions
-(calendar `dim_datum`, customer, product, category, location, region, cost type) and 17 relationships. Plan and actual
+(calendar `dim_datum`, customer, product, category, location, region, cost type) and 16 relationships. Plan and actual
 meet through shared dimensions (date, region, category), never fact table to fact table. The ready Power BI project
 sits in [`powerbi/`](powerbi/) as text files: a TMDL model with a marked date table, relationships and 26 DAX
 measures (sales, contribution margin, margin, EBIT, plan variance, prior year, YTD, open receivables, DSO, bank

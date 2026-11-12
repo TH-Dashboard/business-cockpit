@@ -1622,10 +1622,10 @@ def aufbereitung():
         st.caption(T("Die Dateien werden erst beim Klick erstellt; das Excel braucht ein paar Sekunden.",
                      "Files are built when you click; the Excel takes a few seconds."))
         st.caption(T("Das Power-BI-Projekt ist ein Sternschema: 7 Dimensionen (mit Datumstabelle), 5 Faktentabellen, "
-                     "17 Beziehungen und fertige DAX-Kennzahlen. ZIP entpacken und die .pbip-Datei in Power BI "
+                     "16 Beziehungen und fertige DAX-Kennzahlen. ZIP entpacken und die .pbip-Datei in Power BI "
                      "Desktop öffnen; die Anleitung liegt bei.",
                      "The Power BI project is a star schema: 7 dimensions (with a date table), 5 fact tables, "
-                     "17 relationships and ready-made DAX measures. Unzip and open the .pbip file in Power BI "
+                     "16 relationships and ready-made DAX measures. Unzip and open the .pbip file in Power BI "
                      "Desktop; instructions are included."))
         st.caption(T("Das Prüfpaket enthält bereinigte Daten, ausgeschlossene Zeilen, Änderungsprotokoll, Hinweise, "
                      "Qualitätsprofil, einen Bericht und ein Manifest mit SHA-256-Prüfsumme je Datei.",
