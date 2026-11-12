@@ -170,7 +170,7 @@ The cockpit is a joint project of two data analysts:
 
 | Founder | Contribution |
 |---|---|
-| **Fanuel Hintza** · [GitHub](https://github.com/fanuel-hintza) | Step 1, data cleaning: concept and Power BI template (CFO Data Engine) that the **🧹 Prepare data** page is built on |
+| **Fanuel Hintza** · [LinkedIn](https://www.linkedin.com/in/fanuel-hintza/) · [GitHub](https://github.com/fanuel-hintza) | Step 1, data cleaning: concept and Power BI template (CFO Data Engine) that the **🧹 Prepare data** page is built on |
 | **Denise Tirrel** · [LinkedIn](https://www.linkedin.com/in/denise-tirrel/) · [GitHub](https://github.com/denisetirrel-ops) | Step 2, the cockpit: metrics, pages, SQL, early warning; Streamlit implementation of the cleaning step, tests and deployment |
 
 ## Contact and licence

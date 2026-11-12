@@ -338,7 +338,7 @@ Das Cockpit ist ein gemeinsames Projekt von zwei Data Analysts:
 
 | Gründer | Beitrag |
 |---|---|
-| **Fanuel Hintza** · [GitHub](https://github.com/fanuel-hintza) | Schritt 1, die Datenbereinigung: Konzept und Vorlage in Power BI (CFO Data Engine), auf der die Seite **🧹 Daten aufbereiten** aufbaut |
+| **Fanuel Hintza** · [LinkedIn](https://www.linkedin.com/in/fanuel-hintza/) · [GitHub](https://github.com/fanuel-hintza) | Schritt 1, die Datenbereinigung: Konzept und Vorlage in Power BI (CFO Data Engine), auf der die Seite **🧹 Daten aufbereiten** aufbaut |
 | **Denise Tirrel** · [LinkedIn](https://www.linkedin.com/in/denise-tirrel/) · [GitHub](https://github.com/denisetirrel-ops) | Schritt 2, das Cockpit: Kennzahlen, Seiten, SQL, Frühwarnung; Umsetzung der Bereinigung in Streamlit, Tests und Deployment |
 
 ## Kontakt und Lizenz
