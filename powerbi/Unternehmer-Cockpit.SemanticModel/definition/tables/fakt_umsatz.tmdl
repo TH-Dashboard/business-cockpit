@@ -1,59 +1,59 @@
 table fakt_umsatz
 	lineageTag: 454ba6ca-11aa-56a4-94e8-6a6aea724dd2
 
-	measure Umsatz = SUM ( fakt_umsatz[umsatz] )
+	measure 'Umsatz gesamt' = SUM ( fakt_umsatz[umsatz] )
 		formatString: \$ #,0
 		displayFolder: Ergebnis
-		lineageTag: a0f0d732-f950-5279-84bf-3480e7272ead
+		lineageTag: 2b950063-ff1d-5ba2-8a50-3ced14498999
 
-	measure Wareneinsatz = SUM ( fakt_umsatz[wareneinsatz] )
+	measure 'Wareneinsatz gesamt' = SUM ( fakt_umsatz[wareneinsatz] )
 		formatString: \$ #,0
 		displayFolder: Ergebnis
-		lineageTag: cfa17432-402c-5b04-b753-b8636574b287
+		lineageTag: 61e8b996-2d42-5c20-a636-aeffcd8c799e
 
-	measure Versandkosten = SUM ( fakt_umsatz[versandkosten] )
+	measure 'Versandkosten gesamt' = SUM ( fakt_umsatz[versandkosten] )
 		formatString: \$ #,0
 		displayFolder: Ergebnis
-		lineageTag: ab45464c-9354-512c-82c9-7e348d89194e
+		lineageTag: 20c26572-c073-5cb3-b594-c0475e8ab869
 
 	measure 'DB I' = SUM ( fakt_umsatz[db1] )
 		formatString: \$ #,0
 		displayFolder: Ergebnis
 		lineageTag: d8831c15-5d33-5c24-a883-fa3d5feac17b
 
-	measure Marge = DIVIDE ( [DB I], [Umsatz] )
+	measure Marge = DIVIDE ( [DB I], [Umsatz gesamt] )
 		formatString: 0.0 %
 		displayFolder: Ergebnis
 		lineageTag: 0d2caff3-f3b3-5569-a5a8-3df348673635
 
-	measure Rabattbetrag = SUM ( fakt_umsatz[rabattbetrag] )
+	measure 'Rabatt gesamt' = SUM ( fakt_umsatz[rabattbetrag] )
 		formatString: \$ #,0
 		displayFolder: Ergebnis
-		lineageTag: bfe1a37f-2fd1-5ee5-8f50-be631bcd0594
+		lineageTag: 4b54aaea-87e4-5f32-8ca6-12bc225b7ed3
 
 	measure 'Aufträge' = DISTINCTCOUNT ( fakt_umsatz[auftrag_id] )
 		formatString: #,0
 		displayFolder: Ergebnis
 		lineageTag: 6fc0ba01-6819-5cf6-aff4-b46502ab52ef
 
-	measure 'Umsatz YTD' = TOTALYTD ( [Umsatz], dim_datum[datum] )
+	measure 'Umsatz YTD' = TOTALYTD ( [Umsatz gesamt], dim_datum[datum] )
 		formatString: \$ #,0
 		displayFolder: Zeitvergleich
 		lineageTag: 8677d362-c608-5394-a1b2-99b2fcacb96e
 
-	measure 'Umsatz Vorjahr' = CALCULATE ( [Umsatz], SAMEPERIODLASTYEAR ( dim_datum[datum] ) )
+	measure 'Umsatz Vorjahr' = CALCULATE ( [Umsatz gesamt], SAMEPERIODLASTYEAR ( dim_datum[datum] ) )
 		formatString: \$ #,0
 		displayFolder: Zeitvergleich
 		lineageTag: 1e090987-732d-5b1c-aed1-937179e288c4
 
 	measure 'Umsatz ggü. Vorjahr %' =
 			VAR vj = [Umsatz Vorjahr]
-			RETURN IF ( NOT ISBLANK ( vj ), DIVIDE ( [Umsatz] - vj, vj ) )
+			RETURN IF ( NOT ISBLANK ( vj ), DIVIDE ( [Umsatz gesamt] - vj, vj ) )
 		formatString: 0.0 %
 		displayFolder: Zeitvergleich
 		lineageTag: 3ea48d71-95dd-5260-b2fa-99d7a226fdba
 
-	measure 'Umsatz 12 Monate' = CALCULATE ( [Umsatz], DATESINPERIOD ( dim_datum[datum], MAX ( dim_datum[datum] ), -12, MONTH ) )
+	measure 'Umsatz 12 Monate' = CALCULATE ( [Umsatz gesamt], DATESINPERIOD ( dim_datum[datum], MAX ( dim_datum[datum] ), -12, MONTH ) )
 		formatString: \$ #,0
 		displayFolder: Zeitvergleich
 		lineageTag: f09d740a-1ec4-52d6-8c22-c3a6773ca3fd

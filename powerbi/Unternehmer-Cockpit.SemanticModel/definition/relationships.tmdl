@@ -56,11 +56,6 @@ relationship 45de4523-4162-520f-95dd-6c6bc35ac841
 	fromColumn: fakt_rechnungen.faellig_am
 	toColumn: dim_datum.datum
 
-relationship 80b8d25a-9931-5583-9737-ee28ca9de1f7
-	isActive: false
-	fromColumn: fakt_rechnungen.bezahlt_am
-	toColumn: dim_datum.datum
-
 relationship e944cd38-6b3f-5e45-aa23-5b7d04bd882a
 	fromColumn: fakt_rechnungen.kunde_id
 	toColumn: dim_kunde.kunde_id

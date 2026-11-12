@@ -42,11 +42,11 @@
                       "Entity": "fakt_umsatz"
                     }
                   },
-                  "Property": "Umsatz"
+                  "Property": "Umsatz gesamt"
                 }
               },
-              "queryRef": "fakt_umsatz.Umsatz",
-              "nativeQueryRef": "Umsatz"
+              "queryRef": "fakt_umsatz.Umsatz gesamt",
+              "nativeQueryRef": "Umsatz gesamt"
             },
             {
               "field": {

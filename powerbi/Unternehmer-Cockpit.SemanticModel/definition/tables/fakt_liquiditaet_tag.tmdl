@@ -1,15 +1,15 @@
 table fakt_liquiditaet_tag
 	lineageTag: 2c07a9ac-aad8-5b31-be1f-88101492266f
 
-	measure Kontostand = LASTNONBLANKVALUE ( dim_datum[datum], SUM ( fakt_liquiditaet_tag[kontostand] ) )
+	measure 'Kontostand Stichtag' = LASTNONBLANKVALUE ( dim_datum[datum], SUM ( fakt_liquiditaet_tag[kontostand] ) )
 		formatString: \$ #,0
 		displayFolder: Liquidität
-		lineageTag: 8c32a50e-9187-5e37-b423-3523547b7af5
+		lineageTag: 6ea22dd5-62ac-5be4-9afa-b7152ea27364
 
-	measure Einzahlungen = SUM ( fakt_liquiditaet_tag[einzahlungen] )
+	measure 'Einzahlungen gesamt' = SUM ( fakt_liquiditaet_tag[einzahlungen] )
 		formatString: \$ #,0
 		displayFolder: Liquidität
-		lineageTag: ef45ea73-888c-5d3b-b06c-1a6d0a64512e
+		lineageTag: 05b3ebe8-0282-5979-9198-4d37cb5fa7dd
 
 	measure Auszahlungen = SUM ( fakt_liquiditaet_tag[auszahlungen_ware] ) + SUM ( fakt_liquiditaet_tag[auszahlungen_versand] ) + SUM ( fakt_liquiditaet_tag[auszahlungen_fix] ) + SUM ( fakt_liquiditaet_tag[privatentnahme] )
 		formatString: \$ #,0

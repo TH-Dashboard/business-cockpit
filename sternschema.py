@@ -113,7 +113,8 @@ BEZIEHUNGEN = [
     ("fakt_fixkosten", "kostenart", "dim_kostenart", "kostenart", True, ""),
     ("fakt_rechnungen", "rechnungsdatum", "dim_datum", "datum", True, "Rechnungen nach Rechnungsdatum"),
     ("fakt_rechnungen", "faellig_am", "dim_datum", "datum", False, "inaktiv; bei Bedarf mit USERELATIONSHIP"),
-    ("fakt_rechnungen", "bezahlt_am", "dim_datum", "datum", False, "inaktiv; bei Bedarf mit USERELATIONSHIP"),
+    # bezahlt_am bewusst ohne Beziehung: offene Rechnungen haben kein Zahlungsdatum, ein leerer
+    # Schlüssel erzeugt in Power BI eine Zeile "(Blank)" im Kalender. Kennzahlen lesen die Spalte direkt.
     ("fakt_rechnungen", "kunde_id", "dim_kunde", "kunde_id", True, ""),
     ("fakt_liquiditaet_tag", "datum", "dim_datum", "datum", True, ""),
 ]
@@ -136,26 +137,26 @@ GELD = r"\$ #,0"
 PROZENT = "0.0 %"
 # (Tabelle, Name, DAX, Format, Ordner)
 KENNZAHLEN = [
-    ("fakt_umsatz", "Umsatz", "SUM ( fakt_umsatz[umsatz] )", GELD, "Ergebnis"),
-    ("fakt_umsatz", "Wareneinsatz", "SUM ( fakt_umsatz[wareneinsatz] )", GELD, "Ergebnis"),
-    ("fakt_umsatz", "Versandkosten", "SUM ( fakt_umsatz[versandkosten] )", GELD, "Ergebnis"),
+    ("fakt_umsatz", "Umsatz gesamt", "SUM ( fakt_umsatz[umsatz] )", GELD, "Ergebnis"),
+    ("fakt_umsatz", "Wareneinsatz gesamt", "SUM ( fakt_umsatz[wareneinsatz] )", GELD, "Ergebnis"),
+    ("fakt_umsatz", "Versandkosten gesamt", "SUM ( fakt_umsatz[versandkosten] )", GELD, "Ergebnis"),
     ("fakt_umsatz", "DB I", "SUM ( fakt_umsatz[db1] )", GELD, "Ergebnis"),
-    ("fakt_umsatz", "Marge", "DIVIDE ( [DB I], [Umsatz] )", PROZENT, "Ergebnis"),
-    ("fakt_umsatz", "Rabattbetrag", "SUM ( fakt_umsatz[rabattbetrag] )", GELD, "Ergebnis"),
+    ("fakt_umsatz", "Marge", "DIVIDE ( [DB I], [Umsatz gesamt] )", PROZENT, "Ergebnis"),
+    ("fakt_umsatz", "Rabatt gesamt", "SUM ( fakt_umsatz[rabattbetrag] )", GELD, "Ergebnis"),
     ("fakt_umsatz", "Aufträge", "DISTINCTCOUNT ( fakt_umsatz[auftrag_id] )", "#,0", "Ergebnis"),
-    ("fakt_umsatz", "Umsatz YTD", "TOTALYTD ( [Umsatz], dim_datum[datum] )", GELD, "Zeitvergleich"),
-    ("fakt_umsatz", "Umsatz Vorjahr", "CALCULATE ( [Umsatz], SAMEPERIODLASTYEAR ( dim_datum[datum] ) )", GELD,
+    ("fakt_umsatz", "Umsatz YTD", "TOTALYTD ( [Umsatz gesamt], dim_datum[datum] )", GELD, "Zeitvergleich"),
+    ("fakt_umsatz", "Umsatz Vorjahr", "CALCULATE ( [Umsatz gesamt], SAMEPERIODLASTYEAR ( dim_datum[datum] ) )", GELD,
      "Zeitvergleich"),
     ("fakt_umsatz", "Umsatz ggü. Vorjahr %",
-     "VAR vj = [Umsatz Vorjahr]\nRETURN IF ( NOT ISBLANK ( vj ), DIVIDE ( [Umsatz] - vj, vj ) )", PROZENT,
+     "VAR vj = [Umsatz Vorjahr]\nRETURN IF ( NOT ISBLANK ( vj ), DIVIDE ( [Umsatz gesamt] - vj, vj ) )", PROZENT,
      "Zeitvergleich"),
     ("fakt_umsatz", "Umsatz 12 Monate",
-     "CALCULATE ( [Umsatz], DATESINPERIOD ( dim_datum[datum], MAX ( dim_datum[datum] ), -12, MONTH ) )", GELD,
+     "CALCULATE ( [Umsatz gesamt], DATESINPERIOD ( dim_datum[datum], MAX ( dim_datum[datum] ), -12, MONTH ) )", GELD,
      "Zeitvergleich"),
     ("fakt_plan", "Umsatz Plan", "SUM ( fakt_plan[umsatz_plan] )", GELD, "Plan-Ist"),
     ("fakt_plan", "DB I Plan", "SUM ( fakt_plan[db1_plan] )", GELD, "Plan-Ist"),
     ("fakt_plan", "Umsatz Abweichung %",
-     "VAR p = [Umsatz Plan]\nRETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [Umsatz] - p, p ) )", PROZENT, "Plan-Ist"),
+     "VAR p = [Umsatz Plan]\nRETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [Umsatz gesamt] - p, p ) )", PROZENT, "Plan-Ist"),
     ("fakt_plan", "DB I Abweichung %",
      "VAR p = [DB I Plan]\nRETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [DB I] - p, p ) )", PROZENT, "Plan-Ist"),
     ("fakt_fixkosten", "Fixkosten", "SUM ( fakt_fixkosten[ist] )", GELD, "Ergebnis"),
@@ -178,9 +179,9 @@ KENNZAHLEN = [
     ("fakt_rechnungen", "Ø Zahlungsverzug (Tage)",
      "CALCULATE ( AVERAGE ( fakt_rechnungen[verzug_tage] ), fakt_rechnungen[zahlungsziel_tage] > 0 )", "0.0",
      "Forderungen"),
-    ("fakt_liquiditaet_tag", "Kontostand",
+    ("fakt_liquiditaet_tag", "Kontostand Stichtag",
      "LASTNONBLANKVALUE ( dim_datum[datum], SUM ( fakt_liquiditaet_tag[kontostand] ) )", GELD, "Liquidität"),
-    ("fakt_liquiditaet_tag", "Einzahlungen", "SUM ( fakt_liquiditaet_tag[einzahlungen] )", GELD, "Liquidität"),
+    ("fakt_liquiditaet_tag", "Einzahlungen gesamt", "SUM ( fakt_liquiditaet_tag[einzahlungen] )", GELD, "Liquidität"),
     ("fakt_liquiditaet_tag", "Auszahlungen",
      "SUM ( fakt_liquiditaet_tag[auszahlungen_ware] ) + SUM ( fakt_liquiditaet_tag[auszahlungen_versand] )"
      " + SUM ( fakt_liquiditaet_tag[auszahlungen_fix] ) + SUM ( fakt_liquiditaet_tag[privatentnahme] )", GELD,
@@ -338,14 +339,14 @@ def _visual(name: str, x: int, y: int, b: int, h: int, typ: str, abfrage: dict, 
 
 
 def _bericht_visuals() -> list[dict]:
-    k = [("Umsatz", "fakt_umsatz"), ("DB I", "fakt_umsatz"), ("Marge", "fakt_umsatz"), ("EBIT", "fakt_fixkosten")]
+    k = [("Umsatz gesamt", "fakt_umsatz"), ("DB I", "fakt_umsatz"), ("Marge", "fakt_umsatz"), ("EBIT", "fakt_fixkosten")]
     vis = [_visual(f"karte{i + 1}", 20 + i * 255, 70, 240, 120, "card",
                    {"Values": {"projections": [_proj(t, m)]}}) for i, (m, t) in enumerate(k)]
     vis.append(_visual("filterJahr", 1040, 70, 220, 120, "slicer",
                        {"Values": {"projections": [_proj("dim_datum", "jahr", "Column", True)]}}))
     vis.append(_visual("planIstJahr", 20, 210, 610, 490, "clusteredColumnChart",
                        {"Category": {"projections": [_proj("dim_datum", "jahr", "Column", True)]},
-                        "Y": {"projections": [_proj("fakt_umsatz", "Umsatz"), _proj("fakt_plan", "Umsatz Plan")]}},
+                        "Y": {"projections": [_proj("fakt_umsatz", "Umsatz gesamt"), _proj("fakt_plan", "Umsatz Plan")]}},
                        beschriftung=True, titel="Umsatz Ist und Plan je Jahr"))
     vis.append(_visual("dbRegion", 650, 210, 610, 490, "clusteredBarChart",
                        {"Category": {"projections": [_proj("dim_region", "region", "Column", True)]},
@@ -438,14 +439,15 @@ def projekt_zip(stern: dict[str, pd.DataFrame], excel: bytes, excel_name: str, o
 
 ANLEITUNG = """Power-BI-Projekt Unternehmer-Cockpit (Sternschema)
 
-1. ZIP nach {ordner} entpacken, sodass dort {excel} liegt.
+1. ZIP erst entpacken (Rechtsklick > Alle extrahieren), nicht aus dem ZIP heraus öffnen.
+   Ziel {ordner}, sodass dort {excel} liegt.
    Anderer Ordner: nach dem Öffnen Start > Daten transformieren > Parameter bearbeiten > ExcelDatei anpassen.
 2. {projekt}.pbip mit Power BI Desktop öffnen (Version ab Juni 2024).
    Falls gefragt: Datei > Optionen > Vorschaufeatures > "Power BI-Projekt speichern" und
    "Speichern im TMDL-Format" bzw. "PBIR-Format" aktivieren und Power BI Desktop neu starten.
 3. Start > Aktualisieren lädt die Daten aus dem Excel.
 
-Enthalten: 7 Dimensionen, 5 Faktentabellen, 17 Beziehungen (Blatt "beziehungen" im Excel),
+Enthalten: 7 Dimensionen, 5 Faktentabellen, 16 Beziehungen (Blatt "beziehungen" im Excel),
 eine als Datumstabelle markierte dim_datum und Kennzahlen in DAX (Umsatz, DB I, Marge, EBIT, Plan-Abweichung,
 Vorjahr, YTD, offene Forderungen, Forderungslaufzeit, Kontostand).
 Beträge in US-Dollar wie in der Quelle. Plan, Fixkosten und Zahlungen sind simuliert.
