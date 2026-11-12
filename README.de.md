@@ -12,7 +12,7 @@ Cockpit findet heraus, warum, zeigt, was als Nächstes passiert, und macht aus j
 Fragen, die sich eine Unternehmerin jeden Montag stellt:
 *Wo stehe ich gegen Plan? Warum? Reicht das Geld? Was tue ich jetzt?*
 
-**Live-Demo:** [https://tirrel-business-dashboard.streamlit.app](https://tirrel-business-dashboard.streamlit.app/?lang=de) – ein Klick meldet dich als Berater, Inhaberin oder Mandant an.
+**Live-Demo:** [https://th-dashboard.streamlit.app](https://th-dashboard.streamlit.app/?lang=de) – ein Klick meldet dich als Berater, Inhaberin oder Mandant an.
 Das kostenlose Hosting legt die App nach einer Weile schlafen; der erste Aufruf kann rund 30 Sekunden dauern.
 
 **Gebaut mit** SQL (SQLite, Export aus PostgreSQL), Python, pandas, matplotlib, Streamlit, optional Power BI Desktop
