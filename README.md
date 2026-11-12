@@ -2,6 +2,8 @@
 
 🇬🇧 English · [🇩🇪 Deutsch](README.de.md)
 
+A project by the studio **[TH-Dashboard](https://github.com/TH-Dashboard)** · Repository: [TH-Dashboard/business-cockpit](https://github.com/TH-Dashboard/business-cockpit)
+
 [![Tests](../../actions/workflows/tests.yml/badge.svg)](../../actions/workflows/tests.yml)
 
 ## Revenue is above plan. So why is the money running out?
@@ -166,7 +168,7 @@ real data, I follow GDPR principles: anonymisation, data minimisation and restri
 
 ## Founders
 
-The cockpit is a joint project of two data analysts:
+The cockpit is a joint project of two data analysts under the studio name **[TH-Dashboard](https://github.com/TH-Dashboard)**:
 
 | Founder | Contribution |
 |---|---|
