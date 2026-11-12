@@ -6,5 +6,8 @@ secondaryBackgroundColor = "#FFFFFF"
 textColor = "#0A2342"
 font = "sans serif"
 
+[server]
+maxUploadSize = 20   # MB; passt zu UPLOAD_MAX_MB in app.py und zum Hinweis im Upload-Feld
+
 [browser]
 gatherUsageStats = false
