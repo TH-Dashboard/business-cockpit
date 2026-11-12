@@ -1,0 +1,108 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "planIstJahr",
+  "position": {
+    "x": 20,
+    "y": 210,
+    "z": 5000,
+    "height": 490,
+    "width": 610,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_datum"
+                    }
+                  },
+                  "Property": "jahr"
+                }
+              },
+              "queryRef": "dim_datum.jahr",
+              "nativeQueryRef": "jahr",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_umsatz"
+                    }
+                  },
+                  "Property": "Umsatz"
+                }
+              },
+              "queryRef": "fakt_umsatz.Umsatz",
+              "nativeQueryRef": "Umsatz"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_plan"
+                    }
+                  },
+                  "Property": "Umsatz Plan"
+                }
+              },
+              "queryRef": "fakt_plan.Umsatz Plan",
+              "nativeQueryRef": "Umsatz Plan"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Umsatz Ist und Plan je Jahr'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

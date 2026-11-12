@@ -1,0 +1,74 @@
+table fakt_fixkosten
+	lineageTag: 0fe5599d-1b4a-59cf-a042-ad6992bf4d8b
+
+	measure Fixkosten = SUM ( fakt_fixkosten[ist] )
+		formatString: \$ #,0
+		displayFolder: Ergebnis
+		lineageTag: e0228f94-62f5-54ba-9ebb-e9e25528b638
+
+	measure 'Fixkosten Plan' = SUM ( fakt_fixkosten[plan] )
+		formatString: \$ #,0
+		displayFolder: Plan-Ist
+		lineageTag: 95a08fbf-08c8-5767-ab99-13b2f2e708ba
+
+	measure EBIT = [DB I] - [Fixkosten]
+		formatString: \$ #,0
+		displayFolder: Ergebnis
+		lineageTag: 64128a65-3780-53b2-900e-81b2fba48ad0
+
+	measure 'EBIT Plan' = [DB I Plan] - [Fixkosten Plan]
+		formatString: \$ #,0
+		displayFolder: Plan-Ist
+		lineageTag: 7b031932-baad-5e14-899e-85b0b6ab92b4
+
+	column monat
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: 3912e992-37a7-5b02-ad70-9bf0bd9592b7
+		summarizeBy: none
+		sourceColumn: monat
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column kostenart
+		dataType: string
+		isHidden
+		lineageTag: 77404032-4f22-5b04-9ba5-f9232eb6bc01
+		summarizeBy: none
+		sourceColumn: kostenart
+
+		annotation SummarizationSetBy = User
+
+	column plan
+		dataType: double
+		formatString: #,0.00
+		lineageTag: c6978623-f241-5958-9737-fd5408563be7
+		summarizeBy: sum
+		sourceColumn: plan
+
+		annotation SummarizationSetBy = Automatic
+
+	column ist
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 0aa93fa2-02ba-52a0-a1e6-ab8e48c4552a
+		summarizeBy: sum
+		sourceColumn: ist
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fakt_fixkosten = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="fakt_fixkosten",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"monat", type date}, {"kostenart", type text}, {"plan", type number}, {"ist", type number}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

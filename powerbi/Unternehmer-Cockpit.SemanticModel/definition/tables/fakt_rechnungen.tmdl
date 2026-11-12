@@ -1,0 +1,131 @@
+table fakt_rechnungen
+	lineageTag: 12869665-bdeb-54a4-8793-cad901f90eaf
+
+	measure Rechnungsbetrag = SUM ( fakt_rechnungen[betrag] )
+		formatString: \$ #,0
+		displayFolder: Forderungen
+		lineageTag: 589166ad-fe1a-54a3-9588-558a360dc88e
+
+	measure 'Offene Forderungen' =
+			VAR stichtag = MAX ( dim_datum[datum] )
+			RETURN
+			    CALCULATE (
+			        SUM ( fakt_rechnungen[betrag] ),
+			        REMOVEFILTERS ( dim_datum ),
+			        fakt_rechnungen[rechnungsdatum] <= stichtag,
+			        fakt_rechnungen[status] <> "uneinbringlich",
+			        ISBLANK ( fakt_rechnungen[bezahlt_am] ) || fakt_rechnungen[bezahlt_am] > stichtag
+			    )
+		formatString: \$ #,0
+		displayFolder: Forderungen
+		lineageTag: 91839425-3e4d-5d8b-b04e-50566ee3d1dd
+
+	measure 'Forderungslaufzeit (Tage)' = DIVIDE ( [Offene Forderungen], [Umsatz 12 Monate] ) * 365
+		formatString: 0
+		displayFolder: Forderungen
+		lineageTag: 0da7467b-42ae-5489-944c-9a15e54a5276
+
+	measure 'Ø Zahlungsverzug (Tage)' = CALCULATE ( AVERAGE ( fakt_rechnungen[verzug_tage] ), fakt_rechnungen[zahlungsziel_tage] > 0 )
+		formatString: 0.0
+		displayFolder: Forderungen
+		lineageTag: de35fb09-626a-5d8d-af5b-9b206f2af346
+
+	column auftrag_id
+		dataType: string
+		lineageTag: cf17535e-a6c4-556b-a115-4eacf728686b
+		summarizeBy: none
+		sourceColumn: auftrag_id
+
+		annotation SummarizationSetBy = User
+
+	column kunde_id
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: 54310eff-79cc-5dd0-9c12-9762366d66a0
+		summarizeBy: none
+		sourceColumn: kunde_id
+
+		annotation SummarizationSetBy = User
+
+	column rechnungsdatum
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: 9fbbf478-a7ea-50d4-8968-d1c7ee938f52
+		summarizeBy: none
+		sourceColumn: rechnungsdatum
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column faellig_am
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: 5c9e06e6-1647-5178-b5e3-0db46c421cb0
+		summarizeBy: none
+		sourceColumn: faellig_am
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column bezahlt_am
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: eb460be2-c354-57cf-af34-56818b46cd10
+		summarizeBy: none
+		sourceColumn: bezahlt_am
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column betrag
+		dataType: int64
+		formatString: 0
+		lineageTag: 5843a09f-c951-5edd-b955-15be2d50fb8a
+		summarizeBy: sum
+		sourceColumn: betrag
+
+		annotation SummarizationSetBy = Automatic
+
+	column zahlungsziel_tage
+		dataType: int64
+		formatString: 0
+		lineageTag: 750d8dfc-c6d4-5a8e-be0a-e59f7e009df7
+		summarizeBy: none
+		sourceColumn: zahlungsziel_tage
+
+		annotation SummarizationSetBy = User
+
+	column verzug_tage
+		dataType: int64
+		formatString: 0
+		lineageTag: a4673cf6-7e66-569c-a2a5-c69a7a5a9427
+		summarizeBy: none
+		sourceColumn: verzug_tage
+
+		annotation SummarizationSetBy = User
+
+	column status
+		dataType: string
+		lineageTag: 0247a891-5570-5d7d-b4d6-a6e6eea1031c
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = User
+
+	partition fakt_rechnungen = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="fakt_rechnungen",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"auftrag_id", type text}, {"kunde_id", Int64.Type}, {"rechnungsdatum", type date}, {"faellig_am", type date}, {"bezahlt_am", type date}, {"betrag", Int64.Type}, {"zahlungsziel_tage", Int64.Type}, {"verzug_tage", Int64.Type}, {"status", type text}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

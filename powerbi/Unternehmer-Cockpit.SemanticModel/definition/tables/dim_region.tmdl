@@ -1,0 +1,24 @@
+table dim_region
+	lineageTag: 78a24805-11ec-5700-b545-6f3d20195a3c
+
+	column region
+		dataType: string
+		lineageTag: 11f0ae7f-ab73-5355-a8e5-27c102bf4605
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = User
+
+	partition dim_region = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="dim_region",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"region", type text}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

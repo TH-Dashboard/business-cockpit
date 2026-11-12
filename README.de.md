@@ -52,6 +52,26 @@ Kunden mit wachsendem Zahlungsverzug. Ein Test prüft, dass SQL und pandas diese
 
 Jede Kennzahl ist in [`docs/kennzahlen.md`](docs/kennzahlen.md) definiert, dazu, welche Daten echt und welche simuliert sind.
 
+### Sternschema für Power BI
+
+Für Power BI baut die App aus denselben Daten ein Sternschema: 5 Faktentabellen mit Schlüsseln und Beträgen,
+7 Dimensionen (Kalender `dim_datum`, Kunde, Produkt, Kategorie, Ort, Region, Kostenart) und 17 Beziehungen.
+Plan und Ist treffen sich über gemeinsame Dimensionen (Datum, Region, Kategorie), nie Faktentabelle an Faktentabelle.
+Das fertige Power-BI-Projekt liegt in [`powerbi/`](powerbi/) als Textdateien: Modell in TMDL mit markierter
+Datumstabelle, Beziehungen und 26 DAX-Kennzahlen (Umsatz, DB I, Marge, EBIT, Plan-Abweichung, Vorjahr, YTD, offene
+Forderungen, Forderungslaufzeit, Kontostand), dazu eine Berichtsseite in Pastellfarben.
+
+![Sternschema](docs/sternschema_de.svg)
+
+Herunterladen: Seite **🧹 Daten aufbereiten** → **⭐ Power-BI-Projekt (Sternschema)**. Das ZIP enthält Projekt, Excel
+und Anleitung: nach `C:\Cockpit` entpacken, `Unternehmer-Cockpit.pbip` in Power BI Desktop öffnen, **Aktualisieren**.
+Anderer Ordner: **Daten transformieren → Parameter bearbeiten → ExcelDatei**. Aus dem Repository:
+`python sternschema.py` schreibt `powerbi/` neu und das Excel nach `daten/unicorn_sternschema.xlsx`.
+
+Die Tests prüfen alles, was sich ohne Power BI prüfen lässt: Summen über die Joins gleich den Cockpit-Zahlen,
+eindeutige Schlüssel, jede Beziehung, jeder Verweis in DAX und Bericht, und dass `powerbi/` zum Code passt. Die
+JSON-Dateien des Projekts entsprechen den Schemas von Microsoft.
+
 
 ## Entscheidungen und Grenzen
 
@@ -122,7 +142,8 @@ Bestellposition (CSV oder Excel, Spaltennamen deutsch oder englisch, z. B. „Or
 3. **Bereinigen und prüfen**: Kennzahlen, Diagramm je Regel und vier Reiter (Qualitätsprofil, geänderte Werte,
    ausgeschlossene Zeilen mit Originalwerten, Hinweise).
 4. **Übernehmen**: das ganze Cockpit rechnet mit der aufbereiteten Datei (Seitenleiste „Datenquelle“). Download als
-   Prüfpaket (ZIP mit Manifest und SHA-256 je Datei), als Excel für Power BI und als bereinigte CSV.
+   Prüfpaket (ZIP mit Manifest und SHA-256 je Datei), als Excel für Power BI, als bereinigte CSV und als
+   Power-BI-Projekt mit Sternschema (siehe [Sternschema für Power BI](#sternschema-für-power-bi)).
 
 So sieht das an der Übungsdatei aus (echte Zeilen, Zeilennummer wie in der Datei):
 
@@ -291,12 +312,14 @@ zusätzlich, wie sich der Kontostand tatsächlich entwickelt hat, als Rückblick
 | `quelle.py` | Datenquellen SQLite und Power BI Desktop, Abgleich |
 | `bereinigung.py` | Schritt 0: Export lesen, Spalten erkennen, bereinigen, prüfen, Prüfpaket |
 | `aufbau.py` | baut aus bereinigten Positionen die Cockpit-Tabellen (nutzt auch `gen_data.py`) |
+| `sternschema.py` | Sternschema, Excel mit Blatt „beziehungen“, Power-BI-Projekt (TMDL, Bericht) |
+| `powerbi/` | erzeugtes Power-BI-Projekt (`python sternschema.py`); `powerbi_vorlage/`: Basis-Design von Microsoft |
 | `zugang.py` | Zugänge, Rollen, Passwort-Hashes |
 | `sprache.py` | Texte Deutsch/Englisch und Zahlenformate |
 | `sql/`, `sql_abfragen.py` | Kennzahlen als SQL-Abfragen, Ausführung für App und Tests |
 | `daten/` | SQLite-Datenbank, Datendokumentation, Export-Abfrage und Generator (`erzeugung/`), Übungsdatei (`uebung/`) |
 | `docs/` | Kennzahlen, Datenmodell, Diagramme |
-| `tests/` | automatische Tests (`test_cockpit.py`, `test_bereinigung.py`) |
+| `tests/` | automatische Tests (`test_cockpit.py`, `test_bereinigung.py`, `test_sternschema.py`) |
 | `einstellungen.json` | gespeicherte Schwellen (entsteht beim ersten Speichern) |
 
 ## Regeln und Schwellen (Standard in `logik.py`, änderbar unter Frühwarnung)

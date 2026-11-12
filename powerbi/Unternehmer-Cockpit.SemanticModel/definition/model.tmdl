@@ -1,0 +1,27 @@
+model Model
+	culture: de-DE
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: de-DE
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["ExcelDatei", "dim_datum", "dim_kunde", "dim_produkt", "dim_kategorie", "dim_ort", "dim_region", "dim_kostenart", "fakt_umsatz", "fakt_plan", "fakt_fixkosten", "fakt_rechnungen", "fakt_liquiditaet_tag"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table dim_datum
+ref table dim_kunde
+ref table dim_produkt
+ref table dim_kategorie
+ref table dim_ort
+ref table dim_region
+ref table dim_kostenart
+ref table fakt_umsatz
+ref table fakt_plan
+ref table fakt_fixkosten
+ref table fakt_rechnungen
+ref table fakt_liquiditaet_tag
+

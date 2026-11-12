@@ -1,0 +1,118 @@
+table dim_datum
+	lineageTag: 6d42691d-e7be-5d2b-b7a0-c2407cc7b188
+	dataCategory: Time
+
+	column datum
+		dataType: dateTime
+		isKey
+		formatString: dd.MM.yyyy
+		lineageTag: b06c0840-696d-593e-bc64-ab62ea653e57
+		summarizeBy: none
+		sourceColumn: datum
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column jahr
+		dataType: int64
+		formatString: 0
+		lineageTag: 96f717d2-a742-53be-baaf-e3366d51a52b
+		summarizeBy: none
+		sourceColumn: jahr
+
+		annotation SummarizationSetBy = User
+
+	column quartal
+		dataType: string
+		lineageTag: d6da8bc2-dcf4-56a0-a196-665766c9c5a9
+		summarizeBy: none
+		sourceColumn: quartal
+
+		annotation SummarizationSetBy = User
+
+	column jahr_quartal
+		dataType: string
+		lineageTag: 5af6a1e1-1501-51e0-965c-e6e6d6ec5c4b
+		summarizeBy: none
+		sourceColumn: jahr_quartal
+
+		annotation SummarizationSetBy = User
+
+	column monat_nr
+		dataType: int64
+		formatString: 0
+		lineageTag: 119c8fe4-1d32-5fd4-8f36-310b2e7b2836
+		summarizeBy: none
+		sourceColumn: monat_nr
+
+		annotation SummarizationSetBy = User
+
+	column monatsname
+		dataType: string
+		lineageTag: fcccbf40-4343-53f3-9468-c1d6c6222148
+		summarizeBy: none
+		sourceColumn: monatsname
+		sortByColumn: monat_nr
+
+		annotation SummarizationSetBy = User
+
+	column jahr_monat
+		dataType: string
+		lineageTag: 82bb1d99-af1f-58bf-a836-a0e08e7da608
+		summarizeBy: none
+		sourceColumn: jahr_monat
+
+		annotation SummarizationSetBy = User
+
+	column monatsanfang
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: 2e388504-2e2a-5105-9a97-51960ff649f8
+		summarizeBy: none
+		sourceColumn: monatsanfang
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column wochentag_nr
+		dataType: int64
+		formatString: 0
+		lineageTag: f61b498c-8369-5cce-a79e-616897d1d321
+		summarizeBy: none
+		sourceColumn: wochentag_nr
+
+		annotation SummarizationSetBy = User
+
+	column wochentag
+		dataType: string
+		lineageTag: 810f1e24-3060-58fb-931c-86f5379c2684
+		summarizeBy: none
+		sourceColumn: wochentag
+		sortByColumn: wochentag_nr
+
+		annotation SummarizationSetBy = User
+
+	column kalenderwoche
+		dataType: int64
+		formatString: 0
+		lineageTag: 82e68aa0-e77c-5b4a-903a-64734af1156b
+		summarizeBy: none
+		sourceColumn: kalenderwoche
+
+		annotation SummarizationSetBy = User
+
+	partition dim_datum = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="dim_datum",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"datum", type date}, {"jahr", Int64.Type}, {"quartal", type text}, {"jahr_quartal", type text}, {"monat_nr", Int64.Type}, {"monatsname", type text}, {"jahr_monat", type text}, {"monatsanfang", type date}, {"wochentag_nr", Int64.Type}, {"wochentag", type text}, {"kalenderwoche", Int64.Type}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

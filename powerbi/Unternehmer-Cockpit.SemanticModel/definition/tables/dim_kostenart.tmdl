@@ -1,0 +1,24 @@
+table dim_kostenart
+	lineageTag: 06052aaf-ce0b-5893-afb2-e9596be6e742
+
+	column kostenart
+		dataType: string
+		lineageTag: 4580373d-670c-5138-bd66-c42833026bd0
+		summarizeBy: none
+		sourceColumn: kostenart
+
+		annotation SummarizationSetBy = User
+
+	partition dim_kostenart = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="dim_kostenart",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"kostenart", type text}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

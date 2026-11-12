@@ -52,6 +52,26 @@ its live result.
 Every metric is defined in [`docs/metrics.md`](docs/metrics.md), together with which parts of the data are real and
 which are simulated.
 
+### Star schema for Power BI
+
+For Power BI the app turns the same data into a star schema: 5 fact tables with keys and amounts, 7 dimensions
+(calendar `dim_datum`, customer, product, category, location, region, cost type) and 17 relationships. Plan and actual
+meet through shared dimensions (date, region, category), never fact table to fact table. The ready Power BI project
+sits in [`powerbi/`](powerbi/) as text files: a TMDL model with a marked date table, relationships and 26 DAX
+measures (sales, contribution margin, margin, EBIT, plan variance, prior year, YTD, open receivables, DSO, bank
+balance), plus one report page in pastel colours.
+
+![Star schema](docs/sternschema_en.svg)
+
+Download: page **🧹 Prepare data** → **⭐ Power BI project (star schema)**. The ZIP holds the project, the Excel file
+and instructions: unzip to `C:\Cockpit`, open `Unternehmer-Cockpit.pbip` in Power BI Desktop, **Refresh**. Other
+folder: **Transform data → Edit parameters → ExcelDatei**. From the repository: `python sternschema.py` rewrites
+`powerbi/` and writes the Excel file to `daten/unicorn_sternschema.xlsx`.
+
+The tests check everything that can be checked without Power BI: sums across the joins equal the cockpit figures,
+unique keys, every relationship, every reference in DAX and the report, and that `powerbi/` matches the code. The
+project's JSON files validate against Microsoft's schemas.
+
 
 ## What the app does
 
@@ -143,6 +163,8 @@ on every push.
 | `quelle.py` | data sources SQLite and Power BI Desktop (DAX via ADOMD), comparison |
 | `bereinigung.py` | step 0: read, map, clean and check uploaded exports; audit package |
 | `aufbau.py` | builds the cockpit tables from cleaned order lines (also used by `daten/erzeugung/gen_data.py`) |
+| `sternschema.py` | star schema, Excel with a "beziehungen" (relationships) sheet, Power BI project (TMDL, report) |
+| `powerbi/` | generated Power BI project (`python sternschema.py`); `powerbi_vorlage/`: Microsoft base theme |
 | `sprache.py` | German / English texts and number formats |
 | `zugang.py` | logins, roles, password hashes |
 | `massnahmen.py` | actions (file locally, session only online) |

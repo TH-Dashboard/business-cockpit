@@ -1,0 +1,7 @@
+expression ExcelDatei = "C:\Cockpit\unicorn_sternschema.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: ed4aaa4a-650e-5092-b06f-2b29904ce5a4
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+

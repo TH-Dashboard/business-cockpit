@@ -1,0 +1,230 @@
+table fakt_umsatz
+	lineageTag: 454ba6ca-11aa-56a4-94e8-6a6aea724dd2
+
+	measure Umsatz = SUM ( fakt_umsatz[umsatz] )
+		formatString: \$ #,0
+		displayFolder: Ergebnis
+		lineageTag: a0f0d732-f950-5279-84bf-3480e7272ead
+
+	measure Wareneinsatz = SUM ( fakt_umsatz[wareneinsatz] )
+		formatString: \$ #,0
+		displayFolder: Ergebnis
+		lineageTag: cfa17432-402c-5b04-b753-b8636574b287
+
+	measure Versandkosten = SUM ( fakt_umsatz[versandkosten] )
+		formatString: \$ #,0
+		displayFolder: Ergebnis
+		lineageTag: ab45464c-9354-512c-82c9-7e348d89194e
+
+	measure 'DB I' = SUM ( fakt_umsatz[db1] )
+		formatString: \$ #,0
+		displayFolder: Ergebnis
+		lineageTag: d8831c15-5d33-5c24-a883-fa3d5feac17b
+
+	measure Marge = DIVIDE ( [DB I], [Umsatz] )
+		formatString: 0.0 %
+		displayFolder: Ergebnis
+		lineageTag: 0d2caff3-f3b3-5569-a5a8-3df348673635
+
+	measure Rabattbetrag = SUM ( fakt_umsatz[rabattbetrag] )
+		formatString: \$ #,0
+		displayFolder: Ergebnis
+		lineageTag: bfe1a37f-2fd1-5ee5-8f50-be631bcd0594
+
+	measure 'Aufträge' = DISTINCTCOUNT ( fakt_umsatz[auftrag_id] )
+		formatString: #,0
+		displayFolder: Ergebnis
+		lineageTag: 6fc0ba01-6819-5cf6-aff4-b46502ab52ef
+
+	measure 'Umsatz YTD' = TOTALYTD ( [Umsatz], dim_datum[datum] )
+		formatString: \$ #,0
+		displayFolder: Zeitvergleich
+		lineageTag: 8677d362-c608-5394-a1b2-99b2fcacb96e
+
+	measure 'Umsatz Vorjahr' = CALCULATE ( [Umsatz], SAMEPERIODLASTYEAR ( dim_datum[datum] ) )
+		formatString: \$ #,0
+		displayFolder: Zeitvergleich
+		lineageTag: 1e090987-732d-5b1c-aed1-937179e288c4
+
+	measure 'Umsatz ggü. Vorjahr %' =
+			VAR vj = [Umsatz Vorjahr]
+			RETURN IF ( NOT ISBLANK ( vj ), DIVIDE ( [Umsatz] - vj, vj ) )
+		formatString: 0.0 %
+		displayFolder: Zeitvergleich
+		lineageTag: 3ea48d71-95dd-5260-b2fa-99d7a226fdba
+
+	measure 'Umsatz 12 Monate' = CALCULATE ( [Umsatz], DATESINPERIOD ( dim_datum[datum], MAX ( dim_datum[datum] ), -12, MONTH ) )
+		formatString: \$ #,0
+		displayFolder: Zeitvergleich
+		lineageTag: f09d740a-1ec4-52d6-8c22-c3a6773ca3fd
+
+	column position_id
+		dataType: int64
+		formatString: 0
+		lineageTag: f86ed0f0-ac5b-5855-b349-d8131f7b233a
+		summarizeBy: none
+		sourceColumn: position_id
+
+		annotation SummarizationSetBy = User
+
+	column auftrag_id
+		dataType: string
+		lineageTag: e9861ab5-4686-5845-aeb4-d19051f2711f
+		summarizeBy: none
+		sourceColumn: auftrag_id
+
+		annotation SummarizationSetBy = User
+
+	column auftragsdatum
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: 076f45fb-ffe4-515d-a1ab-5deacd694c45
+		summarizeBy: none
+		sourceColumn: auftragsdatum
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column versanddatum
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		lineageTag: 38da1dce-af26-53b6-a72e-a4d79ff8add8
+		summarizeBy: none
+		sourceColumn: versanddatum
+
+		annotation SummarizationSetBy = User
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column kunde_id
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: 681a8840-318d-5238-bc83-d140750d1270
+		summarizeBy: none
+		sourceColumn: kunde_id
+
+		annotation SummarizationSetBy = User
+
+	column produkt_id
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: 99513a85-bdde-5557-8252-3b5cd1943638
+		summarizeBy: none
+		sourceColumn: produkt_id
+
+		annotation SummarizationSetBy = User
+
+	column ort_id
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: 83b0a6bf-53fc-5eaf-9986-33bd0fba1371
+		summarizeBy: none
+		sourceColumn: ort_id
+
+		annotation SummarizationSetBy = User
+
+	column versandart
+		dataType: string
+		lineageTag: 88f78831-a1e8-5b02-a25f-91cfda266591
+		summarizeBy: none
+		sourceColumn: versandart
+
+		annotation SummarizationSetBy = User
+
+	column rabattstufe
+		dataType: string
+		lineageTag: 6238ad08-35cf-56cf-905d-89b6a85301a5
+		summarizeBy: none
+		sourceColumn: rabattstufe
+
+		annotation SummarizationSetBy = User
+
+	column menge
+		dataType: int64
+		formatString: 0
+		lineageTag: c548d29d-f965-5f48-8ffa-f199c0ac0e8e
+		summarizeBy: sum
+		sourceColumn: menge
+
+		annotation SummarizationSetBy = Automatic
+
+	column rabatt
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 03bd3cee-1b38-516c-a62d-1349f9b560ef
+		summarizeBy: sum
+		sourceColumn: rabatt
+
+		annotation SummarizationSetBy = Automatic
+
+	column listenumsatz
+		dataType: double
+		formatString: #,0.00
+		lineageTag: fb79157c-9a28-58fe-be3a-7a12780fc717
+		summarizeBy: sum
+		sourceColumn: listenumsatz
+
+		annotation SummarizationSetBy = Automatic
+
+	column rabattbetrag
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 5b5e3d79-cae5-5866-9f39-8b27de067145
+		summarizeBy: sum
+		sourceColumn: rabattbetrag
+
+		annotation SummarizationSetBy = Automatic
+
+	column umsatz
+		dataType: int64
+		formatString: 0
+		lineageTag: 20687de4-a0a1-5a65-ab9b-c3f25c042fae
+		summarizeBy: sum
+		sourceColumn: umsatz
+
+		annotation SummarizationSetBy = Automatic
+
+	column wareneinsatz
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 2d4ec89a-4e68-5030-b5d4-26d81f28a659
+		summarizeBy: sum
+		sourceColumn: wareneinsatz
+
+		annotation SummarizationSetBy = Automatic
+
+	column versandkosten
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 1b497dcb-fc31-5da5-a783-d0e258b9ff42
+		summarizeBy: sum
+		sourceColumn: versandkosten
+
+		annotation SummarizationSetBy = Automatic
+
+	column db1
+		dataType: int64
+		formatString: 0
+		lineageTag: d6e973f1-55d4-56ae-830c-14f1d22060a2
+		summarizeBy: sum
+		sourceColumn: db1
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fakt_umsatz = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="fakt_umsatz",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"position_id", Int64.Type}, {"auftrag_id", type text}, {"auftragsdatum", type date}, {"versanddatum", type date}, {"kunde_id", Int64.Type}, {"produkt_id", Int64.Type}, {"ort_id", Int64.Type}, {"versandart", type text}, {"rabattstufe", type text}, {"menge", Int64.Type}, {"rabatt", type number}, {"listenumsatz", type number}, {"rabattbetrag", type number}, {"umsatz", Int64.Type}, {"wareneinsatz", type number}, {"versandkosten", type number}, {"db1", Int64.Type}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

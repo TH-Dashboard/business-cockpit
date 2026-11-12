@@ -1,0 +1,49 @@
+table dim_produkt
+	lineageTag: 041b01ed-f3b8-562f-8cda-20dae4961fab
+
+	column produkt_id
+		dataType: int64
+		formatString: 0
+		lineageTag: f9ca6b60-3daa-5f87-8673-72a78dadb41e
+		summarizeBy: none
+		sourceColumn: produkt_id
+
+		annotation SummarizationSetBy = User
+
+	column produkt
+		dataType: string
+		lineageTag: 71822edb-bf43-55e9-b3ea-61884f0a2a4d
+		summarizeBy: none
+		sourceColumn: produkt
+
+		annotation SummarizationSetBy = User
+
+	column subkategorie
+		dataType: string
+		lineageTag: 3c5a1180-5e58-574e-b1aa-6d0054372889
+		summarizeBy: none
+		sourceColumn: subkategorie
+
+		annotation SummarizationSetBy = User
+
+	column kategorie
+		dataType: string
+		lineageTag: f7b1aaf2-650b-53b5-9791-98369e647e7b
+		summarizeBy: none
+		sourceColumn: kategorie
+
+		annotation SummarizationSetBy = User
+
+	partition dim_produkt = m
+		mode: import
+		source =
+				let
+				    Quelle = Excel.Workbook(File.Contents(ExcelDatei), null, true),
+				    Blatt = Quelle{[Item="dim_produkt",Kind="Sheet"]}[Data],
+				    Kopf = Table.PromoteHeaders(Blatt, [PromoteAllScalars=true]),
+				    Typen = Table.TransformColumnTypes(Kopf, {{"produkt_id", Int64.Type}, {"produkt", type text}, {"subkategorie", type text}, {"kategorie", type text}})
+				in
+				    Typen
+
+	annotation PBI_ResultType = Table
+

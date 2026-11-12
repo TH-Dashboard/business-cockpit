@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "karte2",
+  "position": {
+    "x": 275,
+    "y": 70,
+    "z": 1000,
+    "height": 120,
+    "width": 240,
+    "tabOrder": 1000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_umsatz"
+                    }
+                  },
+                  "Property": "DB I"
+                }
+              },
+              "queryRef": "fakt_umsatz.DB I",
+              "nativeQueryRef": "DB I"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
