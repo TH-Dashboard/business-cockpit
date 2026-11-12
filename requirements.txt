@@ -1,6 +1,6 @@
 # Genau die Versionen, mit denen die App getestet ist (Python 3.14).
-# Für den Excel-Export (python quelle.py excel) zusätzlich: pip install openpyxl
 streamlit==1.67.0
 pandas==3.0.6
 numpy==2.5.4
 matplotlib==3.11.2
+openpyxl==3.1.5

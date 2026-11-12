@@ -53,6 +53,23 @@ which are simulated.
 
 ## What the app does
 
+- **Step 0 · Prepare data**: upload a CSV or Excel export with one row per order line. The app maps the columns,
+  standardises dates, numbers and spellings, sets aside unusable rows with a reason and logs every change. Nothing is
+  estimated or filled in. Afterwards the whole cockpit runs on the cleaned file, and an audit package (ZIP with
+  cleaned data, change log, excluded rows, quality profile and SHA-256 manifest) plus an Excel file for Power BI can
+  be downloaded. A practice file with typical export errors is included: after cleaning, every figure matches the
+  SQLite database exactly. Whether 03/04/2018 means month/day or day/month is detected from the file itself (values
+  like 25/03 allow only one reading). Exports are protected against formula injection.
+
+  | Row | Field | Before | After | Rule |
+  |---|---|---|---|---|
+  | 2 | order date | `09/06/2015` | `2015-09-06` | R03 · month/day, detected from 3,504 unambiguous values |
+  | 14 | sales | `518,00 $` | `518` | R04 |
+  | 10 | profit | `(88)` | `-88` | R04 · brackets = minus |
+  | 9 | discount | `20%` | `0.2` | R05 |
+  | 13 | segment | `CONSUMER` | `Consumer` | R02 |
+  | 50 | customer name | `chris selesnick` | `Chris Selesnick` | R06 · most common spelling for that customer ID |
+  | 176 | whole row | shipped before ordered | excluded | A10 · original values kept in the report |
 - **Plan vs. actual** with a breakdown of the margin gap into volume, mix and price/discount effects
 - **13-week cash forecast** from open invoices, each customer's payment behaviour and planned costs
 - **Early warning** with adjustable thresholds; every signal can become an **action** with owner and due date
@@ -109,7 +126,8 @@ Online demo mode: set `COCKPIT_DEMO = "1"` as an environment variable or in the 
 python -m pip install pytest
 python -m pytest -q
 ```
-The tests recalculate the key figures (revenue, margin, EBIT, cash 2018), the client allocation, the benchmark, the
+The tests also run the practice file through the cleaning step and check that the cockpit then shows exactly the
+same figures as the SQLite database. They recalculate the key figures (revenue, margin, EBIT, cash 2018), the client allocation, the benchmark, the
 SQLite-vs-Power BI check, pseudonymisation, logins, the English output and the demo storage. GitHub Actions runs them
 on every push.
 
@@ -121,12 +139,14 @@ on every push.
 | `logik.py` | all calculations and signals, testable without Streamlit |
 | `diagramme.py` | matplotlib charts with values written into the chart |
 | `quelle.py` | data sources SQLite and Power BI Desktop (DAX via ADOMD), comparison |
+| `bereinigung.py` | step 0: read, map, clean and check uploaded exports; audit package |
+| `aufbau.py` | builds the cockpit tables from cleaned order lines (also used by `daten/erzeugung/gen_data.py`) |
 | `sprache.py` | German / English texts and number formats |
 | `zugang.py` | logins, roles, password hashes |
 | `massnahmen.py` | actions (file locally, session only online) |
 | `ki.py` | fact sheet, Claude API call, example answers without AI |
 | `sql/`, `sql_abfragen.py` | key figures as SQL queries, runner for app and tests |
-| `daten/` | SQLite database, data documentation, export query and generator (`erzeugung/`) |
+| `daten/` | SQLite database, data documentation, export query and generator (`erzeugung/`), practice file (`uebung/`) |
 | `docs/` | metric definitions, data model, charts |
 | `tests/` | automated tests |
 
@@ -138,6 +158,8 @@ motor vehicles (WZ 47), pp. 83–85.
 The online demo uses fictional data only. It sets no cookies of its own, has no tracking and does not send usage
 statistics (`gatherUsageStats = false`). Nothing you enter is stored beyond your session. The app is hosted on
 Streamlit Community Cloud, whose own privacy policy applies to hosting and server logs.
+Uploaded files (step 0) stay in the session's memory only and are not saved. The demo still asks visitors not to
+upload real customer or company data and accepts 20 MB at most.
 
 The data is a public practice dataset plus simulated values, no real personal or customer data. When working with
 real data, I follow GDPR principles: anonymisation, data minimisation and restricted access.

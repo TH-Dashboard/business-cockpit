@@ -24,7 +24,25 @@ def text(name: str) -> str:
     return (ORDNER / f"{name}.sql").read_text(encoding="utf-8")
 
 
-def ausfuehren(name: str, stichtag, pfad: Path | str | None = None) -> pd.DataFrame:
-    """Führt die Abfrage gegen die SQLite-Datenbank aus (Parameter :stichtag)."""
-    with sqlite3.connect(pfad or L.DB_PFAD) as con:
+def ausfuehren(name: str, stichtag, pfad: Path | str | None = None, db: bytes | None = None) -> pd.DataFrame:
+    """Führt die Abfrage gegen die SQLite-Datenbank aus (Parameter :stichtag).
+
+    db: eine Datenbank im Speicher (siehe als_sqlite), z. B. die aufbereitete Datei statt der SQLite-Datei."""
+    con = sqlite3.connect(":memory:" if db else (pfad or L.DB_PFAD))
+    try:
+        if db:
+            con.deserialize(db)
         return pd.read_sql(text(name), con, params={"stichtag": pd.Timestamp(stichtag).strftime("%Y-%m-%d")})
+    finally:
+        con.close()
+
+
+def als_sqlite(tabellen: dict[str, pd.DataFrame]) -> bytes:
+    """Tabellen in eine SQLite-Datenbank im Speicher schreiben, so wie gen_data.py die Datei anlegt."""
+    con = sqlite3.connect(":memory:")
+    try:
+        for n, t in tabellen.items():
+            t.to_sql(n, con, index=False)
+        return con.serialize()
+    finally:
+        con.close()

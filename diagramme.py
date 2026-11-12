@@ -587,3 +587,41 @@ def benchmark_punkte(bm: pd.DataFrame, eigen: str, namen: dict[str, str], eigen_
         ax.tick_params(axis="x", labelsize=8.5)
     fig.tight_layout(h_pad=1.0)
     return fig
+
+
+# ------------------------------------------------------------- Datenaufbereitung
+PASTELL = {"R": "#A8D8C0", "A": "#F2B8C0", "H": "#FBD7A8"}
+PASTELL_RAND = {"R": "#4F9C78", "A": "#B5606D", "H": "#C08A3E"}
+
+
+def bereinigung_regeln(t: pd.DataFrame, zeilen: int, texte: dict[str, str]):
+    """Drei Felder untereinander: vereinheitlichte Werte, ausgeschlossene Zeilen, Hinweise.
+
+    t: Spalten regel, anzahl · zeilen: gelesene Zeilen (für Anteile) · texte: Regel -> Beschriftung
+    """
+    gruppen = [("R", T("Werte vereinheitlicht", "Values standardised")),
+               ("A", T("Zeilen ausgeschlossen", "Rows excluded")),
+               ("H", T("Hinweise (Zeilen bleiben drin)", "Notes (rows are kept)"))]
+    teile = [(g, titel, t[t.regel.str.startswith(g)].sort_values("anzahl")) for g, titel in gruppen]
+    teile = [x for x in teile if len(x[2])]
+    hoehen = [len(x[2]) + 1.2 for x in teile]
+    fig, achsen = plt.subplots(len(teile), 1, figsize=(10, 0.42 * sum(hoehen) + 0.6),
+                               gridspec_kw={"height_ratios": hoehen}, squeeze=False)
+    for ax, (g, titel, d) in zip(achsen[:, 0], teile):
+        y = np.arange(len(d))
+        ax.barh(y, d.anzahl, color=PASTELL[g], edgecolor=PASTELL_RAND[g], height=0.62)
+        ax.set_yticks(y, [texte[r] for r in d.regel])
+        ax.set_title(titel, fontsize=11)
+        top = d.anzahl.max()
+        ax.set_xlim(0, top * 1.42)
+        for yi, n in zip(y, d.anzahl):
+            if g in ("R", "H"):          # Werte (eine Zeile kann mehrere haben)
+                text = T(f"{zahl(n)} Werte", f"{zahl(n)} values")
+            else:
+                text = T(f"{zahl(n)} von {zahl(zeilen)} Zeilen ({proz(n / zeilen, False, 2)})",
+                         f"{zahl(n)} of {zahl(zeilen)} rows ({proz(n / zeilen, False, 2)})")
+            ax.text(n + top * 0.015, yi, text, va="center", fontsize=9, color=FARBE["text"])
+        ax.xaxis.set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+    fig.tight_layout(h_pad=1.0)
+    return fig
