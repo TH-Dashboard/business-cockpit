@@ -151,29 +151,40 @@ KENNZAHLEN = [
      "VAR vj = [Umsatz Vorjahr]\nRETURN IF ( NOT ISBLANK ( vj ), DIVIDE ( [Umsatz gesamt] - vj, vj ) )", PROZENT,
      "Zeitvergleich"),
     ("fakt_umsatz", "Umsatz 12 Monate",
-     "CALCULATE ( [Umsatz gesamt], DATESINPERIOD ( dim_datum[datum], MAX ( dim_datum[datum] ), -12, MONTH ) )", GELD,
+     "VAR letzter = CALCULATE ( MAX ( fakt_umsatz[auftragsdatum] ), REMOVEFILTERS () )\n"
+     "VAR stichtag = MIN ( MAX ( dim_datum[datum] ), letzter )\n"
+     "RETURN IF ( MIN ( dim_datum[datum] ) <= letzter,\n"
+     "    CALCULATE ( [Umsatz gesamt], DATESINPERIOD ( dim_datum[datum], stichtag, -12, MONTH ) ) )", GELD,
      "Zeitvergleich"),
     ("fakt_plan", "Umsatz Plan", "SUM ( fakt_plan[umsatz_plan] )", GELD, "Plan-Ist"),
     ("fakt_plan", "DB I Plan", "SUM ( fakt_plan[db1_plan] )", GELD, "Plan-Ist"),
     ("fakt_plan", "Umsatz Abweichung %",
-     "VAR p = [Umsatz Plan]\nRETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [Umsatz gesamt] - p, p ) )", PROZENT, "Plan-Ist"),
+     # nur Monate mit Ist und Plan vergleichen (Plan reicht ein Jahr weiter als Ist)
+     "VAR monate = FILTER ( VALUES ( dim_datum[jahr_monat] ), NOT ISBLANK ( [Umsatz gesamt] ) && NOT ISBLANK ( [Umsatz Plan] ) )\n"
+     "VAR ist = CALCULATE ( [Umsatz gesamt], monate )\n"
+     "VAR p = CALCULATE ( [Umsatz Plan], monate )\n"
+     "RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( ist - p, p ) )", PROZENT, "Plan-Ist"),
     ("fakt_plan", "DB I Abweichung %",
-     "VAR p = [DB I Plan]\nRETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [DB I] - p, p ) )", PROZENT, "Plan-Ist"),
+     "VAR monate = FILTER ( VALUES ( dim_datum[jahr_monat] ), NOT ISBLANK ( [DB I] ) && NOT ISBLANK ( [DB I Plan] ) )\n"
+     "VAR ist = CALCULATE ( [DB I], monate )\n"
+     "VAR p = CALCULATE ( [DB I Plan], monate )\n"
+     "RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( ist - p, p ) )", PROZENT, "Plan-Ist"),
     ("fakt_fixkosten", "Fixkosten", "SUM ( fakt_fixkosten[ist] )", GELD, "Ergebnis"),
     ("fakt_fixkosten", "Fixkosten Plan", "SUM ( fakt_fixkosten[plan] )", GELD, "Plan-Ist"),
     ("fakt_fixkosten", "EBIT", "[DB I] - [Fixkosten]", GELD, "Ergebnis"),
     ("fakt_fixkosten", "EBIT Plan", "[DB I Plan] - [Fixkosten Plan]", GELD, "Plan-Ist"),
     ("fakt_rechnungen", "Rechnungsbetrag", "SUM ( fakt_rechnungen[betrag] )", GELD, "Forderungen"),
     ("fakt_rechnungen", "Offene Forderungen",
-     "VAR stichtag = MAX ( dim_datum[datum] )\n"
-     "RETURN\n"
+     "VAR letzter = CALCULATE ( MAX ( fakt_umsatz[auftragsdatum] ), REMOVEFILTERS () )\n"
+     "VAR stichtag = MIN ( MAX ( dim_datum[datum] ), letzter )\n"
+     "RETURN IF ( MIN ( dim_datum[datum] ) <= letzter,\n"
      "    CALCULATE (\n"
      "        SUM ( fakt_rechnungen[betrag] ),\n"
      "        REMOVEFILTERS ( dim_datum ),\n"
      "        fakt_rechnungen[rechnungsdatum] <= stichtag,\n"
      "        fakt_rechnungen[status] <> \"uneinbringlich\",\n"
      "        ISBLANK ( fakt_rechnungen[bezahlt_am] ) || fakt_rechnungen[bezahlt_am] > stichtag\n"
-     "    )", GELD, "Forderungen"),
+     "    ) )", GELD, "Forderungen"),
     ("fakt_rechnungen", "Forderungslaufzeit (Tage)",
      "DIVIDE ( [Offene Forderungen], [Umsatz 12 Monate] ) * 365", "0", "Forderungen"),
     ("fakt_rechnungen", "Ø Zahlungsverzug (Tage)",
@@ -187,6 +198,8 @@ KENNZAHLEN = [
      " + SUM ( fakt_liquiditaet_tag[auszahlungen_fix] ) + SUM ( fakt_liquiditaet_tag[privatentnahme] )", GELD,
      "Liquidität"),
 ]
+
+FORMAT = {name: fmt for _, name, _, fmt, _ in KENNZAHLEN}
 
 # Sortierung von Textspalten nach einer Zahlenspalte
 SORTIERUNG = {("dim_datum", "monatsname"): "monat_nr", ("dim_datum", "wochentag"): "wochentag_nr"}
@@ -308,15 +321,89 @@ def _relationships_tmdl() -> str:
 
 # ---------------------------------------------------------------- Bericht (PBIR)
 SCHEMA = "https://developer.microsoft.com/json-schemas/fabric"
-PASTELL = ["#8FB8E8", "#F6B98A", "#9ED6B4", "#E8A0B4", "#C3B1E1", "#F3D98B", "#9FD3D9", "#C9C9C9"]
+
+# ---------------------------------------------------------------- Berichtsstil (Farben wie die Streamlit-App)
+STIL = {
+    "navy": "#0A2342", "blau": "#1A63B7", "hellblau": "#7DB9FF", "orange": "#F28C28", "grau": "#3D5470",
+    "seite": "#E2E8F1", "karte": "#FFFFFF", "rand": "#C3CEDC", "kopf": "#E8EEF6", "zeile": "#F5F8FC",
+    "summe": "#FDE6D2", "gruen": "#2E9E5B", "rot": "#D0435E",
+}
+DATENFARBEN = [STIL["blau"], STIL["orange"], STIL["hellblau"], STIL["gruen"], STIL["navy"], STIL["rot"],
+               "#9FB4CC", "#F6B98A"]
+THEMA_NAME = "Cockpit_TH.json"
+UNTERTITEL = "Unternehmer-Cockpit · TH-Dashboard"
+
+# Raster 1280 x 720: Kopf, Kennzahlreihe, zwei Inhaltsflächen, Navigation
+RAND, LUECKE = 24, 16
+KOPF_Y, KOPF_H = 16, 64
+KPI_Y, KPI_H, KPI_N = 96, 104, 5
+INHALT_Y, INHALT_H = 216, 432
+NAV_Y, NAV_H = 664, 40
+BREITE, HOEHE = 1280, 720
+
+# Seiten: (id, Name, Titel, Filter, Kennzahlen, linke Fläche, rechte Fläche)
+# Fläche: (Typ, Titel, Kategorie-Feld(er), Kennzahlen, chronologisch sortieren)
+# Region-Filter nur dort, wo alle Zahlen je Region gelten (Fixkosten, Forderungen, Konto gibt es nur gesamt).
+J, R = ("dim_datum", "jahr", "Jahr"), ("dim_region", "region", "Region")
+QUARTAL = ("dim_datum", "jahr_quartal", "Quartal")    # Quartale statt Monate: wenige Punkte, jede Zahl lesbar
+SEITEN = [
+    ("ueberblick", "Überblick", "Überblick", [J, R],
+     [("fakt_umsatz", "Umsatz gesamt"), ("fakt_umsatz", "DB I"), ("fakt_umsatz", "Marge"),
+      ("fakt_umsatz", "Aufträge"), ("fakt_plan", "Umsatz Abweichung %")],
+     ("clusteredColumnChart", "Umsatz Ist und Plan je Jahr", [J],
+      [("fakt_umsatz", "Umsatz gesamt"), ("fakt_plan", "Umsatz Plan")], True),
+     ("clusteredBarChart", "DB I Ist und Plan je Region", [R],
+      [("fakt_umsatz", "DB I"), ("fakt_plan", "DB I Plan")], False)),
+    ("planist", "Plan-Ist", "Plan und Ist", [J, R],
+     [("fakt_plan", "Umsatz Plan"), ("fakt_plan", "Umsatz Abweichung %"), ("fakt_plan", "DB I Plan"),
+      ("fakt_plan", "DB I Abweichung %"), ("fakt_umsatz", "Umsatz gesamt")],
+     ("tableEx", "Plan-Ist je Kategorie", [("dim_kategorie", "kategorie", "Kategorie")],
+      [("fakt_umsatz", "Umsatz gesamt"), ("fakt_plan", "Umsatz Plan"), ("fakt_plan", "Umsatz Abweichung %"),
+       ("fakt_plan", "DB I Abweichung %")], False),
+     ("clusteredColumnChart", "Umsatz-Abweichung zum Plan je Quartal", [QUARTAL],
+      [("fakt_plan", "Umsatz Abweichung %")], True)),
+    ("produkte", "Produkte", "Produkte und Kategorien", [J, R],
+     [("fakt_umsatz", "Umsatz gesamt"), ("fakt_umsatz", "Wareneinsatz gesamt"), ("fakt_umsatz", "Rabatt gesamt"),
+      ("fakt_umsatz", "Marge"), ("fakt_umsatz", "Aufträge")],
+     ("tableEx", "Kennzahlen je Kategorie", [("dim_kategorie", "kategorie", "Kategorie")],
+      [("fakt_umsatz", "Umsatz gesamt"), ("fakt_umsatz", "DB I"), ("fakt_umsatz", "Marge"),
+       ("fakt_umsatz", "Aufträge")], False),
+     ("clusteredBarChart", "Umsatz je Unterkategorie", [("dim_produkt", "subkategorie", "Unterkategorie")],
+      [("fakt_umsatz", "Umsatz gesamt")], False)),
+    ("regionen", "Regionen", "Regionen", [J, R],
+     [("fakt_umsatz", "Umsatz gesamt"), ("fakt_umsatz", "DB I"), ("fakt_umsatz", "Marge"),
+      ("fakt_plan", "Umsatz Plan"), ("fakt_umsatz", "Aufträge")],
+     ("tableEx", "Kennzahlen je Region", [R],
+      [("fakt_umsatz", "Umsatz gesamt"), ("fakt_plan", "Umsatz Plan"), ("fakt_umsatz", "DB I"),
+       ("fakt_umsatz", "Marge")], False),
+     ("clusteredBarChart", "Marge je Region", [R],
+      [("fakt_umsatz", "Marge")], False)),
+    ("forderungen", "Forderungen", "Forderungen", [J],
+     [("fakt_rechnungen", "Rechnungsbetrag"), ("fakt_rechnungen", "Offene Forderungen"),
+      ("fakt_rechnungen", "Forderungslaufzeit (Tage)"), ("fakt_rechnungen", "Ø Zahlungsverzug (Tage)"),
+      ("fakt_umsatz", "Umsatz 12 Monate")],
+     ("tableEx", "Rechnungen nach Status", [("fakt_rechnungen", "status", "Status")],
+      [("fakt_rechnungen", "Rechnungsbetrag")], False),
+     ("clusteredColumnChart", "Offene Forderungen zum Jahresende", [J],
+      [("fakt_rechnungen", "Offene Forderungen")], True)),
+    ("liquiditaet", "Liquidität", "Liquidität", [J],
+     [("fakt_liquiditaet_tag", "Kontostand Stichtag"), ("fakt_liquiditaet_tag", "Einzahlungen gesamt"),
+      ("fakt_liquiditaet_tag", "Auszahlungen"), ("fakt_fixkosten", "Fixkosten"), ("fakt_fixkosten", "EBIT")],
+     ("lineChart", "Kontostand je Quartal", [QUARTAL],
+      [("fakt_liquiditaet_tag", "Kontostand Stichtag")], True),
+     ("clusteredColumnChart", "Ein- und Auszahlungen je Jahr", [J],
+      [("fakt_liquiditaet_tag", "Einzahlungen gesamt"), ("fakt_liquiditaet_tag", "Auszahlungen")], True)),
+]
 
 
 def _feld(tabelle: str, name: str, art: str) -> dict:
     return {art: {"Expression": {"SourceRef": {"Entity": tabelle}}, "Property": name}}
 
 
-def _proj(tabelle: str, name: str, art: str = "Measure", aktiv: bool = False) -> dict:
+def _proj(tabelle: str, name: str, art: str = "Measure", aktiv: bool = False, anzeige: str | None = None) -> dict:
     p = {"field": _feld(tabelle, name, art), "queryRef": f"{tabelle}.{name}", "nativeQueryRef": name}
+    if anzeige:
+        p["displayName"] = anzeige
     return {**p, "active": True} if aktiv else p
 
 
@@ -324,43 +411,161 @@ def _an(wert: str) -> dict:
     return {"expr": {"Literal": {"Value": wert}}}
 
 
-def _visual(name: str, x: int, y: int, b: int, h: int, typ: str, abfrage: dict, beschriftung: bool = False,
-            titel: str | None = None) -> dict:
-    v = {"visualType": typ, "query": {"queryState": abfrage}, "drillFilterOtherVisuals": True}
-    objekte = {}
+def _farbe(hexwert: str) -> dict:
+    return {"solid": {"color": _an(f"'{hexwert}'")}}
+
+
+def _visual(name: str, x: int, y: int, b: int, h: int, typ: str, abfrage: dict | None = None,
+            beschriftung: bool = False, titel: str | None = None, objekte: dict | None = None,
+            sortierung: dict | None = None) -> dict:
+    v = {"visualType": typ, "drillFilterOtherVisuals": True}
+    if abfrage:
+        v["query"] = {"queryState": abfrage}
+        if sortierung:
+            v["query"]["sortDefinition"] = sortierung
+    o = dict(objekte or {})
     if beschriftung:
-        objekte["labels"] = [{"properties": {"show": _an("true")}}]
-    if objekte:
-        v["objects"] = objekte
+        o["labels"] = [{"properties": {"show": _an("true")}}]
+    if o:
+        v["objects"] = o
     if titel:
         v["visualContainerObjects"] = {"title": [{"properties": {"show": _an("true"), "text": _an(f"'{titel}'")}}]}
     return {"$schema": f"{SCHEMA}/item/report/definition/visualContainer/2.13.0/schema.json", "name": name,
             "position": {"x": x, "y": y, "z": 0, "height": h, "width": b, "tabOrder": 0}, "visual": v}
 
 
-def _bericht_visuals() -> list[dict]:
-    k = [("Umsatz gesamt", "fakt_umsatz"), ("DB I", "fakt_umsatz"), ("Marge", "fakt_umsatz"), ("EBIT", "fakt_fixkosten")]
-    vis = [_visual(f"karte{i + 1}", 20 + i * 255, 70, 240, 120, "card",
-                   {"Values": {"projections": [_proj(t, m)]}}) for i, (m, t) in enumerate(k)]
-    vis.append(_visual("filterJahr", 1040, 70, 220, 120, "slicer",
-                       {"Values": {"projections": [_proj("dim_datum", "jahr", "Column", True)]}}))
-    vis.append(_visual("planIstJahr", 20, 210, 610, 490, "clusteredColumnChart",
-                       {"Category": {"projections": [_proj("dim_datum", "jahr", "Column", True)]},
-                        "Y": {"projections": [_proj("fakt_umsatz", "Umsatz gesamt"), _proj("fakt_plan", "Umsatz Plan")]}},
-                       beschriftung=True, titel="Umsatz Ist und Plan je Jahr"))
-    vis.append(_visual("dbRegion", 650, 210, 610, 490, "clusteredBarChart",
-                       {"Category": {"projections": [_proj("dim_region", "region", "Column", True)]},
-                        "Y": {"projections": [_proj("fakt_umsatz", "DB I"), _proj("fakt_plan", "DB I Plan")]}},
-                       beschriftung=True, titel="DB I Ist und Plan je Region"))
+def _titelzeile(text: str) -> dict:
+    absaetze = [
+        {"textRuns": [{"value": text, "textStyle": {"fontWeight": "bold", "fontSize": "20pt",
+                                                     "color": STIL["navy"]}}]},
+        {"textRuns": [{"value": UNTERTITEL, "textStyle": {"fontSize": "9pt", "color": STIL["grau"]}}]},
+    ]
+    return {"general": [{"properties": {"paragraphs": absaetze}}]}
+
+
+def _flaeche(name: str, x: int, b: int, art: tuple) -> dict:
+    typ, titel, kategorien, kennzahlen, chrono = art
+    kat = [_proj(t, s, "Column", typ != "tableEx", a) for t, s, a in kategorien]
+    werte = [_proj(t, m) for t, m in kennzahlen]
+    if typ == "tableEx":
+        abfrage = {"Values": {"projections": kat + werte}}
+    else:
+        abfrage = {"Category": {"projections": kat}, "Y": {"projections": werte}}
+    if chrono:      # Zeitachsen links nach rechts
+        t, s, _ = kategorien[0]
+        sort = {"field": _feld(t, s, "Column"), "direction": "Ascending"}
+    else:           # sonst größter Wert zuerst
+        t, m = kennzahlen[0]
+        sort = {"field": _feld(t, m, "Measure"), "direction": "Descending"}
+    sortierung = {"sort": [sort], "isDefaultSort": True}
+    objekte = None
+    if typ != "tableEx" and all(FORMAT[m] == GELD for _, m in kennzahlen):
+        # Geld in Tausend ohne Nachkommastelle: $ 497K statt $ 0,5M, so bleibt jeder Wert unterscheidbar
+        objekte = {"labels": [{"properties": {"show": _an("true"), "labelDisplayUnits": _an("1000D"),
+                                              "labelPrecision": _an("0L")}}]}
+    return _visual(name, x, INHALT_Y, b, INHALT_H, typ, abfrage, beschriftung=typ != "tableEx" and not objekte,
+                   titel=titel, objekte=objekte, sortierung=sortierung)
+
+
+def _seiten_visuals(seite: tuple) -> list[dict]:
+    sid, _, titel, filter_, kpis, links, rechts = seite
+    innen = BREITE - 2 * RAND
+    vis = [_visual("titel", RAND, KOPF_Y, 560, KOPF_H, "textbox", objekte=_titelzeile(titel))]
+    fb = 190
+    for i, (t, s, a) in enumerate(reversed(filter_)):
+        x = BREITE - RAND - (i + 1) * fb - i * LUECKE
+        vis.append(_visual(f"filter{a}", x, KOPF_Y, fb, KOPF_H, "slicer",
+                           {"Values": {"projections": [_proj(t, s, "Column", True, a)]}},
+                           objekte={"data": [{"properties": {"mode": _an("'Dropdown'")}}]}))
+    kb = (innen - (KPI_N - 1) * LUECKE) // KPI_N
+    for i, (t, m) in enumerate(kpis):
+        vis.append(_visual(f"kpi{i + 1}", RAND + i * (kb + LUECKE), KPI_Y, kb, KPI_H, "card",
+                           {"Values": {"projections": [_proj(t, m)]}}))
+    lb = (innen - LUECKE) // 2
+    vis.append(_flaeche("links", RAND, lb, links))
+    vis.append(_flaeche("rechts", RAND + lb + LUECKE, innen - lb - LUECKE, rechts))
+    vis.append(_visual("navigation", RAND, NAV_Y, innen, NAV_H, "pageNavigator"))
     for i, v in enumerate(vis):
         v["position"]["z"] = v["position"]["tabOrder"] = i * 1000
     return vis
 
 
+def _bericht_visuals() -> dict[str, list[dict]]:
+    """Visuals je Seiten-ID."""
+    return {s[0]: _seiten_visuals(s) for s in SEITEN}
+
+
 def _theme() -> dict:
-    return {"name": "Cockpit Pastell", "dataColors": PASTELL, "foreground": "#0A2342", "background": "#FFFFFF",
-            "tableAccent": "#8FB8E8", "good": "#9ED6B4", "neutral": "#F3D98B", "bad": "#E8A0B4",
-            "maximum": "#8FB8E8", "center": "#F3D98B", "minimum": "#E8A0B4"}
+    """Power-BI-Theme in den Farben der App: grau-blaue Seite, weiße Karten mit runden Ecken, Navy-Schrift."""
+    s = STIL
+
+    def f(c):
+        return {"solid": {"color": c}}
+
+    karte = {"background": [{"show": True, "color": f(s["karte"]), "transparency": 0}],
+             "border": [{"show": True, "color": f(s["rand"]), "radius": 12}],
+             "dropShadow": [{"show": True, "color": f(s["navy"]), "position": "Outer", "preset": "Custom",
+                             "shadowSpread": 0, "shadowBlur": 14, "angle": 90, "shadowDistance": 4,
+                             "transparency": 82}],
+             "title": [{"show": True, "fontColor": f(s["navy"]), "fontSize": 12, "bold": True,
+                        "fontFamily": "Segoe UI Semibold"}],
+             "padding": [{"top": 10, "bottom": 10, "left": 14, "right": 14}],
+             "visualHeader": [{"show": False}]}
+    ohne = {"background": [{"show": False}], "border": [{"show": False}], "dropShadow": [{"show": False}],
+            "title": [{"show": False}], "visualHeader": [{"show": False}],
+            "padding": [{"top": 0, "bottom": 0, "left": 0, "right": 0}]}
+    tabelle = {"columnHeaders": [{"backColor": f(s["kopf"]), "fontColor": f(s["navy"]), "bold": True,
+                                  "fontSize": 10}],
+               "values": [{"backColorPrimary": f(s["karte"]), "backColorSecondary": f(s["zeile"]),
+                           "fontColorPrimary": f(s["navy"]), "fontColorSecondary": f(s["navy"]), "fontSize": 10}],
+               "total": [{"backColor": f(s["summe"]), "fontColor": f(s["navy"]), "bold": True}],
+               "grid": [{"gridVertical": False, "gridHorizontal": False, "rowPadding": 4}]}
+    achse = {"categoryAxis": [{"labelColor": f(s["grau"]), "fontSize": 10, "showAxisTitle": False}],
+             "valueAxis": [{"show": False, "showAxisTitle": False, "gridlineShow": False}],
+             "labels": [{"show": True, "color": f(s["navy"]), "fontSize": 11, "fontFamily": "Segoe UI Semibold",
+                         "labelPosition": "OutsideEnd"}],
+             "legend": [{"show": True, "position": "Top", "labelColor": f(s["grau"]), "fontSize": 10}]}
+    return {
+        "name": "Cockpit TH", "dataColors": DATENFARBEN, "foreground": s["navy"], "foregroundNeutralSecondary": s["grau"],
+        "background": s["karte"], "backgroundLight": s["zeile"], "backgroundNeutral": s["rand"],
+        "tableAccent": s["blau"], "good": s["gruen"], "neutral": s["orange"], "bad": s["rot"],
+        "maximum": s["blau"], "center": s["hellblau"], "minimum": s["rot"],
+        "textClasses": {"title": {"fontFace": "Segoe UI Semibold", "color": s["navy"], "fontSize": 12},
+                        "label": {"fontFace": "Segoe UI", "color": s["grau"], "fontSize": 10},
+                        "callout": {"fontFace": "Segoe UI Semibold", "color": s["blau"], "fontSize": 26}},
+        "visualStyles": {
+            "page": {"*": {"background": [{"color": f(s["seite"]), "transparency": 0}],
+                           "outspace": [{"color": f(s["seite"]), "transparency": 0}]}},
+            "*": {"*": karte},
+            "card": {"*": {**karte, "title": [{"show": False}],
+                           "labels": [{"color": f(s["blau"]), "fontSize": 24, "labelDisplayUnits": 1,
+                                       "fontFamily": "Segoe UI Semibold"}],
+                           "categoryLabels": [{"show": True, "color": f(s["grau"]), "fontSize": 11}]}},
+            "textbox": {"*": ohne},
+            "slicer": {"*": {**karte, "title": [{"show": False}],
+                             "header": [{"show": True, "fontColor": f(s["grau"]), "textSize": 10, "bold": True}],
+                             "items": [{"fontColor": f(s["navy"]), "textSize": 11}]}},
+            "pageNavigator": {"*": {**ohne,
+                                    "fill": [{"$id": "default", "show": True, "fillColor": f(s["karte"])},
+                                             {"$id": "hover", "fillColor": f(s["kopf"])},
+                                             {"$id": "selected", "fillColor": f(s["navy"])}],
+                                    "text": [{"$id": "default", "fontColor": f(s["navy"]), "bold": True,
+                                              "fontSize": 11},
+                                             {"$id": "selected", "fontColor": f(s["karte"])}],
+                                    "outline": [{"$id": "default", "show": True, "lineColor": f(s["blau"]),
+                                                 "weight": 1, "roundEdge": 8},
+                                                {"$id": "selected", "lineColor": f(s["navy"])}]}},
+            "tableEx": {"*": tabelle},
+            "pivotTable": {"*": tabelle},
+            "clusteredColumnChart": {"*": achse},
+            "clusteredBarChart": {"*": achse},
+            "lineChart": {"*": {**achse, "labels": [{"show": True, "color": f(s["navy"]), "fontSize": 10,
+                                                     "fontFamily": "Segoe UI Semibold", "labelPosition": "Above",
+                                                     "enableBackground": True, "backgroundColor": f(s["karte"]),
+                                                     "backgroundTransparency": 0}],
+                                "lineStyles": [{"strokeWidth": 3, "showMarker": True, "markerSize": 5}]}},
+        },
+    }
 
 
 def _json(d: dict) -> str:
@@ -371,8 +576,8 @@ def projekt_dateien(stern: dict[str, pd.DataFrame], excel_pfad: str = EXCEL_STAN
                     name: str = PROJEKT) -> dict[str, str]:
     """Alle Textdateien eines Power-BI-Projekts (PBIP) mit TMDL-Modell und PBIR-Bericht."""
     sm, rp = f"{name}.SemanticModel", f"{name}.Report"
-    seite = "c0c4b1d2e3f4a5b6c7d8"
-    thema = "Cockpit_Pastell.json"
+    thema = THEMA_NAME
+    seiten = _bericht_visuals()
     f = {
         f"{name}.pbip": _json({
             "$schema": f"{SCHEMA}/pbip/pbipProperties/1.0.0/schema.json", "version": "1.0",
@@ -408,18 +613,19 @@ def projekt_dateien(stern: dict[str, pd.DataFrame], excel_pfad: str = EXCEL_STAN
                          "useDefaultAggregateDisplayName": True}}),
         f"{rp}/definition/pages/pages.json": _json({
             "$schema": f"{SCHEMA}/item/report/definition/pagesMetadata/1.1.0/schema.json",
-            "pageOrder": [seite], "activePageName": seite}),
-        f"{rp}/definition/pages/{seite}/page.json": _json({
-            "$schema": f"{SCHEMA}/item/report/definition/page/2.1.0/schema.json", "name": seite,
-            "displayName": "Überblick", "displayOption": "FitToPage", "height": 720, "width": 1280}),
+            "pageOrder": [x[0] for x in SEITEN], "activePageName": SEITEN[0][0]}),
         f"{rp}/StaticResources/SharedResources/BaseThemes/CY24SU10.json":
             (VORLAGE / "CY24SU10.json").read_text(encoding="utf-8"),
         f"{rp}/StaticResources/RegisteredResources/{thema}": _json(_theme()),
     }
     for t, df in stern.items():
         f[f"{sm}/definition/tables/{t}.tmdl"] = _tabelle_tmdl(t, df)
-    for v in _bericht_visuals():
-        f[f"{rp}/definition/pages/{seite}/visuals/{v['name']}/visual.json"] = _json(v)
+    for sid, anzeige, *_ in SEITEN:
+        f[f"{rp}/definition/pages/{sid}/page.json"] = _json({
+            "$schema": f"{SCHEMA}/item/report/definition/page/2.1.0/schema.json", "name": sid,
+            "displayName": anzeige, "displayOption": "FitToPage", "height": HOEHE, "width": BREITE})
+        for v in seiten[sid]:
+            f[f"{rp}/definition/pages/{sid}/visuals/{v['name']}/visual.json"] = _json(v)
     return f
 
 

@@ -59,7 +59,7 @@ For Power BI the app turns the same data into a star schema: 5 fact tables with 
 meet through shared dimensions (date, region, category), never fact table to fact table. The ready Power BI project
 sits in [`powerbi/`](powerbi/) as text files: a TMDL model with a marked date table, relationships and 26 DAX
 measures (sales, contribution margin, margin, EBIT, plan variance, prior year, YTD, open receivables, DSO, bank
-balance), plus one report page in pastel colours.
+balance), plus a six-page report in the app's colours (overview, plan vs actual, products, regions, receivables, cash) with KPI cards, filters and page navigation.
 
 ![Star schema](docs/sternschema_en.svg)
 

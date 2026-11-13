@@ -7,15 +7,16 @@ table fakt_rechnungen
 		lineageTag: 589166ad-fe1a-54a3-9588-558a360dc88e
 
 	measure 'Offene Forderungen' =
-			VAR stichtag = MAX ( dim_datum[datum] )
-			RETURN
+			VAR letzter = CALCULATE ( MAX ( fakt_umsatz[auftragsdatum] ), REMOVEFILTERS () )
+			VAR stichtag = MIN ( MAX ( dim_datum[datum] ), letzter )
+			RETURN IF ( MIN ( dim_datum[datum] ) <= letzter,
 			    CALCULATE (
 			        SUM ( fakt_rechnungen[betrag] ),
 			        REMOVEFILTERS ( dim_datum ),
 			        fakt_rechnungen[rechnungsdatum] <= stichtag,
 			        fakt_rechnungen[status] <> "uneinbringlich",
 			        ISBLANK ( fakt_rechnungen[bezahlt_am] ) || fakt_rechnungen[bezahlt_am] > stichtag
-			    )
+			    ) )
 		formatString: \$ #,0
 		displayFolder: Forderungen
 		lineageTag: 91839425-3e4d-5d8b-b04e-50566ee3d1dd

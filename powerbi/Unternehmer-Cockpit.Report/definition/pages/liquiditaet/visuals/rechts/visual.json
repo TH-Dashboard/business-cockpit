@@ -1,0 +1,141 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "rechts",
+  "position": {
+    "x": 648,
+    "y": 216,
+    "z": 8000,
+    "height": 432,
+    "width": 608,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_datum"
+                    }
+                  },
+                  "Property": "jahr"
+                }
+              },
+              "queryRef": "dim_datum.jahr",
+              "nativeQueryRef": "jahr",
+              "displayName": "Jahr",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_liquiditaet_tag"
+                    }
+                  },
+                  "Property": "Einzahlungen gesamt"
+                }
+              },
+              "queryRef": "fakt_liquiditaet_tag.Einzahlungen gesamt",
+              "nativeQueryRef": "Einzahlungen gesamt"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_liquiditaet_tag"
+                    }
+                  },
+                  "Property": "Auszahlungen"
+                }
+              },
+              "queryRef": "fakt_liquiditaet_tag.Auszahlungen",
+              "nativeQueryRef": "Auszahlungen"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dim_datum"
+                  }
+                },
+                "Property": "jahr"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1000D"
+                }
+              }
+            },
+            "labelPrecision": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Ein- und Auszahlungen je Jahr'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

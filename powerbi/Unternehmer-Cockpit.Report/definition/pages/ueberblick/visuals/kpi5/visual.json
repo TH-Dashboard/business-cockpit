@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "kpi5",
+  "position": {
+    "x": 1020,
+    "y": 96,
+    "z": 7000,
+    "height": 104,
+    "width": 233,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "card",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_plan"
+                    }
+                  },
+                  "Property": "Umsatz Abweichung %"
+                }
+              },
+              "queryRef": "fakt_plan.Umsatz Abweichung %",
+              "nativeQueryRef": "Umsatz Abweichung %"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
