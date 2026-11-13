@@ -340,8 +340,10 @@ def startseite(zug: dict):
         "- **Tools:** SQL, Python, pandas, matplotlib, Streamlit; Power BI Desktop via DAX (local); automated tests with pytest\n"
         "- **Industry values:** U.S. Census Bureau, Annual Retail Trade Survey (US retail)\n"
         "- **Privacy:** roles with password hashing, customer-name pseudonymisation, nothing is stored in the demo"))
-    st.caption(T("Projekt von Denise Tirrel · Alle Unternehmens- und Kundendaten sind fiktiv.",
-                 "Project by Denise Tirrel · All company and customer data are fictional."))
+    st.caption(T("Ein Projekt des Studios [TH-Dashboard](https://github.com/TH-Dashboard): Fanuel Hintza "
+                 "(Datenbereinigung) und Denise Tirrel (Cockpit) · Alle Unternehmens- und Kundendaten sind fiktiv.",
+                 "A project by the studio [TH-Dashboard](https://github.com/TH-Dashboard): Fanuel Hintza "
+                 "(data cleaning) and Denise Tirrel (cockpit) · All company and customer data are fictional."))
 
 
 SEITEN_PFADE = ["ueberblick", "plan_ist", "liquiditaet", "benchmark", "was_waere_wenn", "fruehwarnung",
