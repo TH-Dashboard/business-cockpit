@@ -644,37 +644,39 @@ def mandant_daten(d: Daten, region: str) -> Daten:
 
 
 # ---------------------------------------------------------------- Schritt 3: Benchmark
-# Branchenwerte: Deutsche Bundesbank, Jahresabschlussstatistik (Hochgerechnete Angaben),
-# Dezember 2025, Abschnitt 6c „Einzelhandel (ohne Handel mit Kraftfahrzeugen)“, S. 83–85.
-# Rohertragsquote = 100 % − Materialaufwand (% der Gesamtleistung).
-# Forderungslaufzeit = Forderungen aus L+L / Umsatz · 365. Wachstum = Umsatz gegen Vorjahr.
-BRANCHE_QUELLE = ("Deutsche Bundesbank, Jahresabschlussstatistik (Hochgerechnete Angaben), Dez. 2025, "
-                  "Einzelhandel ohne Kfz (WZ 47), S. 83–85")
-BRANCHE_ROH = {  # Jahr: (Umsatz Mrd €, Materialaufwand %, Personalaufwand %, Ergebnis vor Steuern % Umsatz, Forderungen L+L Mrd €)
-    2015: (521.4, 67.1, 13.6, 3.8, 15.3),
-    2016: (541.4, 66.7, 13.5, 3.9, 16.2),
-    2017: (563.1, 66.4, 13.6, 3.9, 17.5),
-    2018: (572.6, 66.9, 13.4, 3.5, 18.0),
+# Branchenwerte: U.S. Census Bureau, Annual Retail Trade Survey (ARTS) 2018, veröffentlicht Feb. 2020,
+# Zeile „Retail ... total (excl. motor vehicle and parts dealers)“ der Tabellen sales.xls, gmper.xls,
+# exp.xls und arr.xls (https://www.census.gov/data/tables/2018/econ/arts/annual-report.html).
+# Rohertragsquote = Gross margin as a percentage of sales.
+# Operative Marge = Rohertragsquote − Betriebskosten / Umsatz (Näherung für EBIT / Umsatz).
+# Forderungslaufzeit = Forderungen am Jahresende / Umsatz · 365. Wachstum = Umsatz gegen Vorjahr.
+# Betriebskosten und Forderungen enthalten nur Firmen mit Angestellten, der Umsatz auch Firmen ohne.
+BRANCHE_QUELLE = ("U.S. Census Bureau, Annual Retail Trade Survey 2018 (Feb. 2020), "
+                  "Retail excl. motor vehicle and parts dealers")
+BRANCHE_ROH = {  # Jahr: (Umsatz Mio $, Rohertrag % Umsatz, Betriebskosten Mio $, Forderungen Mio $)
+    2015: (3_631_881, 32.1, 907_367, 33_089),
+    2016: (3_712_344, 32.5, 949_787, 33_734),
+    2017: (3_880_784, 32.5, 1_000_531, 33_123),
+    2018: (4_078_147, 32.6, 1_038_256, 33_434),
 }
-BRANCHE_VJ_UMSATZ = {2015: 507.4}   # Umsatz 2014 (Mrd €), Basis für das Wachstum 2015
+BRANCHE_VJ_UMSATZ = {2015: 3_618_589}   # Umsatz 2014 (Mio $), Basis für das Wachstum 2015
 
 # Kennzahl: (Titel, Einheit, höher ist besser)
 BENCH_KZ = {
     "rohertrag": ("Rohertragsquote", "%", True),
-    "personal": ("Personalkostenquote", "%", False),
     "rendite": ("Umsatzrendite (EBIT)", "%", True),
     "dso": ("Forderungslaufzeit", "Tage", False),
     "wachstum": ("Umsatzwachstum", "%", True),
 }
-BENCH_KZ_EN = {"rohertrag": "Gross margin", "personal": "Staff cost ratio", "rendite": "EBIT margin",
+BENCH_KZ_EN = {"rohertrag": "Gross margin", "rendite": "EBIT margin",
                "dso": "Days sales outstanding", "wachstum": "Revenue growth"}
 
 
 def branche(jahr: int) -> dict:
     j = min(max(jahr, min(BRANCHE_ROH)), max(BRANCHE_ROH))
-    u, mat, pers, erg, ford = BRANCHE_ROH[j]
+    u, roh, kosten, ford = BRANCHE_ROH[j]
     u_vj = BRANCHE_ROH[j - 1][0] if j - 1 in BRANCHE_ROH else BRANCHE_VJ_UMSATZ[j]
-    return {"jahr": j, "rohertrag": 100 - mat, "personal": pers, "rendite": erg,
+    return {"jahr": j, "rohertrag": roh, "rendite": roh - kosten / u * 100,
             "dso": ford / u * 365, "wachstum": (u / u_vj - 1) * 100}
 
 
@@ -690,7 +692,6 @@ def bench_kennzahlen(d: Daten, s: pd.Timestamp) -> dict:
     return {
         "umsatz": umsatz,
         "rohertrag": (umsatz - u.wareneinsatz.sum()) / umsatz * 100,
-        "personal": f.loc[f.kostenart == "Personal", "ist"].sum() / umsatz * 100,
         "rendite": (u.db1.sum() - f.ist.sum()) / umsatz * 100,
         "dso": forderungen / umsatz * 365,
         # Wachstum nur, wenn die 12 Vergleichsmonate vollständig in den Daten liegen

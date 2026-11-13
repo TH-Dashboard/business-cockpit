@@ -256,10 +256,10 @@ def startseite(zug: dict):
            f"EBIT {L.geld(pf.loc[sw, 'ebit'])}, cash {L.geld(pf.loc[sw, 'kontostand'])}, down to "
            f"{L.geld(pf.loc[sw, 'liq_min'])} within 13 weeks.")),
         (T("Kunden zahlen langsam", "Customers pay slowly"),
-         T(f"Die Forderungslaufzeit liegt bei {L.zahl(dso.gesamt, 1)} Tagen, der Einzelhandel schafft "
-           f"{L.zahl(dso.branche, 1)} Tage (Bundesbank). Einzelne Geschäftskunden zahlen zuletzt 30–60 Tage später.",
+         T(f"Die Forderungslaufzeit liegt bei {L.zahl(dso.gesamt, 1)} Tagen, der US-Einzelhandel schafft "
+           f"{L.zahl(dso.branche, 1)} Tage (U.S. Census Bureau). Einzelne Geschäftskunden zahlen zuletzt 30–60 Tage später.",
            f"Days sales outstanding are {L.zahl(dso.gesamt, 1)} days vs. {L.zahl(dso.branche, 1)} days for "
-           f"German retail (Bundesbank). Some business customers recently pay 30–60 days later.")),
+           f"US retail (U.S. Census Bureau). Some business customers recently pay 30–60 days later.")),
     ]
     for spalte, (titel, text) in zip(c, karten):
         spalte.markdown(f'<div class="kachel" style="border-color:{ORANGE}"><div class="wert" style="white-space:normal;'
@@ -331,12 +331,12 @@ def startseite(zug: dict):
         "- **Daten:** fiktiver Übungsdatensatz (Tableau Sample Superstore, im Masterschool-Kurs als SQL-Datenbank "
         "„Unicorn“), 9.997 Auftragspositionen 2015–2018. Plan, Fixkosten und Zahlungen sind dazu simuliert.\n"
         "- **Werkzeuge:** SQL, Python, pandas, matplotlib, Streamlit; Power BI Desktop per DAX (lokal); automatische Tests mit pytest\n"
-        "- **Branchenwerte:** Deutsche Bundesbank, Jahresabschlussstatistik Einzelhandel\n"
+        "- **Branchenwerte:** U.S. Census Bureau, Annual Retail Trade Survey (US-Einzelhandel)\n"
         "- **Datenschutz:** Rollen mit Passwort-Hash, Pseudonymisierung der Kundennamen, in der Demo wird nichts gespeichert",
         "- **Data:** fictional training dataset (Tableau Sample Superstore, used as the SQL database “Unicorn” in the "
         "Masterschool course), 9,997 order lines 2015–2018. Plan, fixed costs and payments are simulated on top.\n"
         "- **Tools:** SQL, Python, pandas, matplotlib, Streamlit; Power BI Desktop via DAX (local); automated tests with pytest\n"
-        "- **Industry values:** Deutsche Bundesbank, financial statements statistics for retail\n"
+        "- **Industry values:** U.S. Census Bureau, Annual Retail Trade Survey (US retail)\n"
         "- **Privacy:** roles with password hashing, customer-name pseudonymisation, nothing is stored in the demo"))
     st.caption(T("Projekt von Denise Tirrel · Alle Unternehmens- und Kundendaten sind fiktiv.",
                  "Project by Denise Tirrel · All company and customer data are fictional."))
@@ -1231,10 +1231,10 @@ def benchmark_seite():
         namen = {m: f"Region {m}" for m in L.mandanten(D_GESAMT)}
         kopf("Unicorn · " + T("Vergleich", "Comparison"), "Benchmark")
     von = (s - pd.DateOffset(months=12) + pd.Timedelta(days=1))
-    st.caption(T(f"{name}: letzte 12 Monate ({L.datum(von)}–{L.datum(s)}) gegen den deutschen Einzelhandel "
-                 f"{b['jahr']} (Bundesbank) und gegen " + ("die anderen Mandanten (anonym)." if MANDANT else "die vier Regionen."),
-                 f"{name}: last 12 months ({L.datum(von)}–{L.datum(s)}) vs. German retail {b['jahr']} "
-                 f"(Deutsche Bundesbank) and vs. " + ("the other clients (anonymised)." if MANDANT else "the four regions.")))
+    st.caption(T(f"{name}: letzte 12 Monate ({L.datum(von)}–{L.datum(s)}) gegen den US-Einzelhandel "
+                 f"{b['jahr']} (U.S. Census Bureau) und gegen " + ("die anderen Mandanten (anonym)." if MANDANT else "die vier Regionen."),
+                 f"{name}: last 12 months ({L.datum(von)}–{L.datum(s)}) vs. US retail {b['jahr']} "
+                 f"(U.S. Census Bureau) and vs. " + ("the other clients (anonymised)." if MANDANT else "the four regions.")))
     if s.year != b["jahr"]:
         st.info(T(f"Für {s.year} liegen keine passenden Branchenwerte vor; verglichen wird mit {b['jahr']}.",
                   f"No industry values are available for {s.year}; comparing with {b['jahr']}."), icon="ℹ️")
@@ -1261,35 +1261,32 @@ def benchmark_seite():
     with st.expander(T("Woher kommen die Branchenwerte, und wie vergleichbar ist das?",
                        "Where do the industry values come from, and how comparable are they?")):
         st.markdown(T(
-            f"**Quelle:** {L.BRANCHE_QUELLE}. Hochgerechnete Werte für alle Unternehmen der Branche.  \n"
-            "**Rohertragsquote:** bei uns (Umsatz − Wareneinsatz) / Umsatz; Branche: 100 % − Materialaufwand "
-            "(in % der Gesamtleistung).  \n"
-            "**Personalkostenquote:** Personalkosten / Umsatz. Achtung: Unicorn ist inhabergeführt, der "
-            "Unternehmerlohn fehlt in den Personalkosten. Die Quote sieht dadurch besser aus, als sie ist.  \n"
-            "**Umsatzrendite:** bei uns EBIT / Umsatz, Branche: Jahresergebnis vor Gewinnsteuern / Umsatz. "
-            "Auch hier fehlt bei uns der Unternehmerlohn.  \n"
-            "**Forderungslaufzeit:** offene Forderungen am Stichtag / Umsatz × 365; Branche: Forderungen aus "
-            "Lieferungen und Leistungen / Umsatz × 365.  \n"
+            f"**Quelle:** {L.BRANCHE_QUELLE}. Hochgerechnete Werte für alle US-Einzelhändler ohne "
+            "Autohandel, im selben Zeitraum wie die Unicorn-Daten (2015–2018).  \n"
+            "**Rohertragsquote:** bei uns (Umsatz − Wareneinsatz) / Umsatz; Branche: Gross margin in % vom Umsatz.  \n"
+            "**Umsatzrendite:** bei uns EBIT / Umsatz; Branche: Rohertragsquote − Betriebskosten / Umsatz "
+            "(operative Marge). Bei uns fehlt der Unternehmerlohn, die Quote sieht dadurch besser aus, als sie ist.  \n"
+            "**Forderungslaufzeit:** offene Forderungen am Stichtag / Umsatz × 365; Branche: Forderungen am "
+            "Jahresende / Umsatz × 365. Im US-Einzelhandel zahlen fast alle Kunden sofort per Karte; Unicorn hat "
+            "dagegen Geschäftskunden mit 14 bzw. 30 Tagen Zahlungsziel.  \n"
             "**Umsatzwachstum:** letzte 12 Monate gegen die 12 Monate davor; Branche: Jahresumsatz gegen Vorjahr.  \n\n"
-            "**Grenzen:** Unicorn ist ein US-Händler mit Werten in Dollar, die Branche ist der deutsche "
-            "Einzelhandel in Euro. Quoten sind trotzdem vergleichbar, Beträge nicht. Fixkosten sind bei den "
-            "Mandanten per Umlage verteilt; Unterschiede in Personal- und Fixkostenquote kommen daher nur aus "
-            "unterschiedlicher Planerfüllung. Plan, Fixkosten und Zahlungsziele sind simuliert.",
-            f"**Source:** {L.BRANCHE_QUELLE} (Deutsche Bundesbank, financial statements statistics, extrapolated "
-            "figures for all companies in German retail excl. motor vehicles).  \n"
-            "**Gross margin:** ours (revenue − cost of goods) / revenue; industry: 100% − cost of materials "
-            "(% of total output).  \n"
-            "**Staff cost ratio:** staff costs / revenue. Note: Unicorn is owner-managed and the owner's salary "
-            "is not in staff costs, so the ratio looks better than it is.  \n"
-            "**EBIT margin:** ours EBIT / revenue; industry: profit before income taxes / revenue. The owner's "
-            "salary is missing here too.  \n"
-            "**Days sales outstanding:** open receivables at the reporting date / revenue × 365; industry: trade "
-            "receivables / revenue × 365.  \n"
-            "**Revenue growth:** last 12 months vs. the 12 months before; industry: annual revenue vs. prior year.  \n\n"
-            "**Limits:** Unicorn is a US retailer reporting in dollars; the industry is German retail in euros. "
-            "Ratios are still comparable, amounts are not. Fixed costs are allocated to clients by planned revenue, "
-            "so differences in staff and fixed-cost ratios only reflect plan attainment. Plan, fixed costs and "
-            "payment terms are simulated."))
+            "**Grenzen:** Die Branche umfasst große und kleine Händler, Unicorn ist ein kleiner Online-Händler. "
+            "Betriebskosten und Forderungen erhebt der Census nur für Firmen mit Angestellten. Eine "
+            "Personalkostenquote veröffentlicht der Survey nicht jährlich, deshalb fehlt sie hier. Fixkosten "
+            "sind bei den Mandanten per Umlage verteilt. Plan, Fixkosten und Zahlungsziele sind simuliert.",
+            f"**Source:** {L.BRANCHE_QUELLE}. Estimates for all US retailers excl. motor vehicle dealers, "
+            "for the same period as the Unicorn data (2015–2018).  \n"
+            "**Gross margin:** ours (revenue − cost of goods) / revenue; industry: gross margin as % of sales.  \n"
+            "**EBIT margin:** ours EBIT / revenue; industry: gross margin − operating expenses / sales "
+            "(operating margin). The owner's salary is missing on our side, so the ratio looks better than it is.  \n"
+            "**Days sales outstanding:** open receivables at the reporting date / revenue × 365; industry: "
+            "year-end accounts receivable / sales × 365. In US retail almost every customer pays by card at once; "
+            "Unicorn also has business customers with 14 or 30 days payment terms.  \n"
+            "**Revenue growth:** last 12 months vs. the 12 months before; industry: annual sales vs. prior year.  \n\n"
+            "**Limits:** The industry covers large and small retailers, Unicorn is a small online retailer. "
+            "The Census collects operating expenses and receivables only for firms with paid employees. The survey "
+            "does not publish a staff cost ratio every year, so it is left out here. Fixed costs are allocated "
+            "to clients by planned revenue. Plan, fixed costs and payment terms are simulated."))
 
 
 # ------------------------------------------------------------------ Schritt 0: Daten aufbereiten

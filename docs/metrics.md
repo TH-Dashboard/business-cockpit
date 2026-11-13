@@ -29,14 +29,13 @@ Column **SQL** names the query in [`sql/`](../sql) that computes the same figure
 | **Break-even revenue** | fixed costs / margin | 12 months | – |
 | **Margin of safety** | (revenue − break-even) / revenue | 12 months | – |
 
-**Benchmark** (last 12 months, against Deutsche Bundesbank, retail excl. motor vehicles, WZ 47):
+**Benchmark** (last 12 months, against U.S. Census Bureau, Annual Retail Trade Survey, retail excl. motor vehicle dealers):
 
 | Metric | Unicorn | Industry |
 |---|---|---|
-| Gross margin | (revenue − cost of goods) / revenue | 100 % − cost of materials |
-| Staff cost ratio | staff costs / revenue | staff costs / total output |
-| EBIT margin | EBIT / revenue | result before taxes / revenue |
-| DSO | as above | trade receivables / revenue × 365 |
+| Gross margin | (revenue − cost of goods) / revenue | gross margin as % of sales |
+| EBIT margin | EBIT / revenue | gross margin − operating expenses / sales |
+| DSO | as above | year-end accounts receivable / sales × 365 |
 | Revenue growth | revenue / revenue of the prior 12 months − 1 (only with 12 full comparison months) | revenue / prior year − 1 |
 
 **Client mode:** the four regions act as four clients. Revenue, CM I and invoices belong to the region; fixed costs,
