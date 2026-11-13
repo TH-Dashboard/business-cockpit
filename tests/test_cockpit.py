@@ -90,12 +90,14 @@ def test_portfolio_2018(d):
 
 def test_benchmark_2018(d):
     bm = L.benchmark(d, S).set_index("kz")
-    assert bm.loc["rohertrag", "branche"] == pytest.approx(33.1, abs=0.01)
-    assert bm.loc["dso", "branche"] == pytest.approx(11.47, abs=0.01)
+    assert bm.loc["rohertrag", "branche"] == pytest.approx(32.6, abs=0.01)
+    assert bm.loc["dso", "branche"] == pytest.approx(2.99, abs=0.01)
     assert bm.loc["dso", "gesamt"] == pytest.approx(20.11, abs=0.01)
     assert bm.loc["rendite", "Central"] == pytest.approx(-5.14, abs=0.01)
+    assert bm.loc["rendite", "branche"] == pytest.approx(7.14, abs=0.01)
+    assert set(bm.index) == {"rohertrag", "rendite", "dso", "wachstum"}
     besser = sum((bm.gesamt > bm.branche) == bm.hoch_gut)
-    assert besser == 3
+    assert besser == 1
 
 
 def test_benchmark_ohne_volles_vorjahr(d):

@@ -29,14 +29,13 @@ Die Spalte **SQL** nennt die Abfrage im Ordner [`sql/`](../sql), die dieselbe Za
 | **Break-even-Umsatz** | Fixkosten / Marge | 12 Monate | – |
 | **Sicherheitsabstand** | (Umsatz − Break-even) / Umsatz | 12 Monate | – |
 
-**Benchmark** (letzte 12 Monate, gegen Deutsche Bundesbank, Einzelhandel ohne Kfz, WZ 47):
+**Benchmark** (letzte 12 Monate, gegen U.S. Census Bureau, Annual Retail Trade Survey, Einzelhandel ohne Autohandel):
 
 | Kennzahl | Unicorn | Branche |
 |---|---|---|
-| Rohertragsquote | (Umsatz − Wareneinsatz) / Umsatz | 100 % − Materialaufwand |
-| Personalkostenquote | Personalkosten / Umsatz | Personalaufwand / Gesamtleistung |
-| Umsatzrendite | EBIT / Umsatz | Ergebnis vor Steuern / Umsatz |
-| Forderungslaufzeit | wie oben | Forderungen L+L / Umsatz × 365 |
+| Rohertragsquote | (Umsatz − Wareneinsatz) / Umsatz | Rohertrag in % vom Umsatz |
+| Umsatzrendite | EBIT / Umsatz | Rohertragsquote − Betriebskosten / Umsatz |
+| Forderungslaufzeit | wie oben | Forderungen am Jahresende / Umsatz × 365 |
 | Umsatzwachstum | Umsatz / Umsatz der 12 Monate davor − 1 (erst bei 12 vollen Vergleichsmonaten) | Umsatz / Vorjahr − 1 |
 
 **Mandanten-Modus:** Die vier Regionen sind vier Mandanten. Umsatz, DB I und Rechnungen gehören zur Region;

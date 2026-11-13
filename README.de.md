@@ -31,7 +31,7 @@ als Datenquelle · zweisprachig (Deutsch/Englisch) · 21 automatische Tests.
 |---|---|
 | 💸 Rabatte fressen die Marge | Umsatz **+4,8 %** gegen Plan, DB I **−6,3 %**. Aufträge mit über 20 % Rabatt bringen 14,7 % des Umsatzes und **−47.575 $** DB I. |
 | 📉 Central rutscht ins Minus | Region Central verfehlt den Plan um **7,6 %**. Als eigener Mandant: EBIT −7.564 $, Konto −10.818 $, in 13 Wochen bis −14.265 $. |
-| ⏳ Kunden zahlen langsam | Forderungslaufzeit **20,1 Tage**, der deutsche Einzelhandel schafft 11,5 Tage (Bundesbank). |
+| ⏳ Kunden zahlen langsam | Forderungslaufzeit **20,1 Tage**, der US-Einzelhandel schafft 3,0 Tage (U.S. Census Bureau). |
 
 ![Umsatz je Monat gegen Plan](docs/umsatz_de.png)
 ![DB-I-Brücke](docs/wasserfall_de.png)
@@ -82,8 +82,10 @@ JSON-Dateien des Projekts entsprechen den Schemas von Microsoft.
   Versand ist eine Annahme je Versandart.
 - **Umlage.** Fixkosten, Entnahme und Startkasse sind Firmenwerte und werden im Mandanten-Modus nach Planumsatz
   verteilt; die vier Mandanten ergeben zusammen genau die Firma (getestet).
-- **Benchmark.** US-Händler gegen deutschen Einzelhandel: Quoten vergleichbar, Beträge nicht. Der Unternehmerlohn
-  fehlt, Personalquote und Umsatzrendite sehen dadurch besser aus, als sie sind.
+- **Benchmark.** US-Einzelhandel (U.S. Census Bureau, 2015–2018), also gleiches Land und gleiche Jahre wie die Daten.
+  Er umfasst große und kleine Händler, die meisten mit Kartenzahlung, daher die große Lücke bei der Forderungslaufzeit.
+  Der Unternehmerlohn fehlt, die Umsatzrendite sieht dadurch besser aus, als sie ist. Eine jährliche
+  Personalkostenquote veröffentlicht der Survey nicht, deshalb fehlt diese Kennzahl.
 - **Wachstum** erscheint erst, wenn 12 volle Vergleichsmonate vorliegen (ab 12/2016).
 - **Online-Demo.** Niemand speichert etwas für andere: Maßnahmen gelten nur in der Sitzung, Schwellen sind fest,
   Power BI und KI werden durch Erklärungen und regelbasierte Beispielantworten ersetzt
@@ -101,7 +103,7 @@ JSON-Dateien des Projekts entsprechen den Schemas von Microsoft.
 - **Für Besucher mit zwei Minuten bauen.** Drei Erkenntnisse auf der Startseite, Ein-Klick-Anmeldung und ein kurzer
   Rundgang bringen mehr als eine weitere Funktion.
 
-**Nächste Schritte:** im Rückblick zeigen, wie gut die Liquiditätsprognose war · Branchenvergleich mit US-Handelszahlen ·
+**Nächste Schritte:** im Rückblick zeigen, wie gut die Liquiditätsprognose war · Branchenvergleich nur mit Online-Händlern ·
 Montags-Briefing als PDF · Anbindung an einen echten Buchhaltungsexport.
 
 ## Für Entwickler
@@ -274,7 +276,7 @@ den Abgleich SQLite gegen Power BI, die Pseudonymisierung und die Zugänge. Schl
 | Maßnahmen | Liste mit Verantwortlichem, Fälligkeit, Status und erwartetem EBIT-Effekt (gespeichert in `massnahmen.sqlite`) |
 | Frag dein Cockpit | KI beantwortet Fragen zu den Zahlen (braucht `ANTHROPIC_API_KEY`) |
 | Montags-Briefing | fertiger E-Mail-Text, als Entwurf im E-Mail-Programm öffnen oder herunterladen |
-| Benchmark | 5 Kennzahlen (letzte 12 Monate) gegen den deutschen Einzelhandel (Bundesbank) und gegen die anderen Mandanten bzw. Regionen |
+| Benchmark | 4 Kennzahlen (letzte 12 Monate) gegen den US-Einzelhandel (U.S. Census Bureau) und gegen die anderen Mandanten bzw. Regionen |
 | Mandanten-Übersicht | nur extern: alle Mandanten mit Ampel, dringendstem Signal und Button „Öffnen“ |
 
 ## Externer Modus (Schritt 3)
@@ -291,10 +293,12 @@ den Abgleich SQLite gegen Power BI, die Pseudonymisierung und die Zugänge. Schl
 
 ## Branchenwerte
 
-Deutsche Bundesbank, Jahresabschlussstatistik (Hochgerechnete Angaben), Dezember 2025, Einzelhandel ohne Kfz
-(WZ 47), S. 83–85. Werte 2015–2018 stehen in `logik.py` (`BRANCHE_ROH`). Rohertragsquote = 100 % − Materialaufwand,
-Forderungslaufzeit = Forderungen aus L+L / Umsatz · 365. Vergleich nur als Übung: Unicorn ist ein US-Händler,
-der Unternehmerlohn fehlt in den Personalkosten.
+U.S. Census Bureau, *Annual Retail Trade Survey 2018* (Februar 2020), Einzelhandel ohne Autohandel
+(„excl. motor vehicle and parts dealers“), Tabellen Umsatz, Rohertrag in %, Betriebskosten und Forderungen
+(<https://www.census.gov/data/tables/2018/econ/arts/annual-report.html>). Werte 2015–2018 stehen in `logik.py`
+(`BRANCHE_ROH`). Umsatzrendite der Branche = Rohertragsquote − Betriebskosten / Umsatz,
+Forderungslaufzeit = Forderungen am Jahresende / Umsatz · 365. Betriebskosten und Forderungen erhebt der Census nur
+für Firmen mit Angestellten. Bei Unicorn fehlt der Unternehmerlohn.
 
 Oben links wählst du den **Stichtag** (Monatsende 01/2016 bis 12/2018). Alle Werte gelten
 für das Jahr bis zu diesem Stichtag. Bei Stichtagen vor 10/2018 zeigt die Liquiditätsseite

@@ -30,7 +30,7 @@ data source · bilingual (German / English) · 21 automated tests.
 |---|---|
 | 💸 Discounts eat the margin | Revenue is **+4.8 %** vs. plan, contribution margin **−6.3 %**. Orders with more than 20 % discount bring 14.7 % of revenue and **−$47,575** of margin. |
 | 📉 Central slides into the red | Region Central misses plan by **7.6 %**. As a separate client: EBIT −$7,564, bank balance −$10,818, falling to −$14,265 within 13 weeks. |
-| ⏳ Customers pay slowly | Days sales outstanding **20.1 days** vs. 11.5 days for German retail (Deutsche Bundesbank). |
+| ⏳ Customers pay slowly | Days sales outstanding **20.1 days** vs. 3.0 days for US retail (U.S. Census Bureau). |
 
 ![Monthly revenue vs. plan](docs/umsatz_en.png)
 ![Contribution margin bridge](docs/wasserfall_en.png)
@@ -97,7 +97,7 @@ project's JSON files validate against Microsoft's schemas.
 - **Early warning** with adjustable thresholds; every signal can become an **action** with owner and due date
 - **What-if**: discount cap, sales volume, fixed costs, payment terms → EBIT bridge, break-even, cash impact
 - **Client mode for advisors**: four regions act as four clients, fixed costs allocated by planned revenue,
-  client overview with traffic lights, anonymised **industry benchmark** (Deutsche Bundesbank)
+  client overview with traffic lights, anonymised **industry benchmark** (US retail, U.S. Census Bureau)
 - **Roles** (advisor, owner, client) with password hashing; **pseudonymisation** of customer names
 - **Monday briefing** as a ready e-mail draft; **AI question field** (Claude API, fact sheet only, no raw data)
 - **Power BI Desktop** as an alternative data source (local, Windows), checked row by row against SQLite
@@ -111,8 +111,9 @@ project's JSON files validate against Microsoft's schemas.
   cost of goods and shipping is an assumption by shipping mode.
 - **Cost allocation.** Fixed costs, owner drawings and opening cash are company values. In client mode they are
   allocated by planned revenue; the four clients add up exactly to the company (tested).
-- **Benchmark.** Unicorn is a US retailer, the benchmark is German retail. Ratios are comparable, amounts are not.
-  The owner's salary is missing from staff costs, so staff cost ratio and EBIT margin look better than they are.
+- **Benchmark.** US retail (U.S. Census Bureau, 2015–2018), the same country and years as the data. It covers large
+  and small retailers, most of them paid by card at once, so the DSO gap is large. The owner's salary is missing on our
+  side, so the EBIT margin looks better than it is. The survey has no yearly staff cost ratio, so that KPI is left out.
 - **Growth** is only shown once 12 full comparison months exist (from Dec 2016).
 - **Online demo.** Nothing is stored for other visitors: actions live in the session only, thresholds are fixed,
   Power BI and the AI field are replaced by explanations and rule-based example answers.
@@ -128,7 +129,7 @@ project's JSON files validate against Microsoft's schemas.
 - **Design for a two-minute visitor.** Three findings on the start page, one-click logins and a short tour matter more
   than another feature.
 
-**Next steps:** show how accurate the cash forecast was in hindsight · a US retail benchmark to match the data ·
+**Next steps:** show how accurate the cash forecast was in hindsight · a benchmark for online retailers only ·
 the Monday briefing as a PDF · a connector for a real accounting export.
 
 ## Run locally
@@ -174,8 +175,8 @@ on every push.
 | `docs/` | metric definitions, data model, charts |
 | `tests/` | automated tests |
 
-Industry values: Deutsche Bundesbank, *Jahresabschlussstatistik (Hochgerechnete Angaben)*, Dec 2025, retail excl.
-motor vehicles (WZ 47), pp. 83–85.
+Industry values: U.S. Census Bureau, *Annual Retail Trade Survey 2018* (Feb 2020), retail excl. motor vehicle and parts dealers; tables sales, gross margin %, operating expenses and accounts receivable
+(<https://www.census.gov/data/tables/2018/econ/arts/annual-report.html>).
 
 ## Privacy
 
