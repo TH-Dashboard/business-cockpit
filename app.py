@@ -257,9 +257,11 @@ def startseite(zug: dict):
            f"{L.geld(pf.loc[sw, 'liq_min'])} within 13 weeks.")),
         (T("Kunden zahlen langsam", "Customers pay slowly"),
          T(f"Die Forderungslaufzeit liegt bei {L.zahl(dso.gesamt, 1)} Tagen, der US-Einzelhandel schafft "
-           f"{L.zahl(dso.branche, 1)} Tage (U.S. Census Bureau). Einzelne Geschäftskunden zahlen zuletzt 30–60 Tage später.",
+           f"{L.zahl(dso.branche, 1)} Tage, weil dort die meisten Kunden sofort mit Karte zahlen (U.S. Census Bureau). "
+           f"Einzelne Geschäftskunden zahlen zuletzt 30–60 Tage später.",
            f"Days sales outstanding are {L.zahl(dso.gesamt, 1)} days vs. {L.zahl(dso.branche, 1)} days for "
-           f"US retail (U.S. Census Bureau). Some business customers recently pay 30–60 days later.")),
+           f"US retail, where most customers pay by card on the spot (U.S. Census Bureau). "
+           f"Some business customers recently pay 30–60 days later.")),
     ]
     for spalte, (titel, text) in zip(c, karten):
         spalte.markdown(f'<div class="kachel" style="border-color:{ORANGE}"><div class="wert" style="white-space:normal;'
