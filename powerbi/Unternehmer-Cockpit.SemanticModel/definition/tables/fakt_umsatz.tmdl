@@ -53,7 +53,11 @@ table fakt_umsatz
 		displayFolder: Zeitvergleich
 		lineageTag: 3ea48d71-95dd-5260-b2fa-99d7a226fdba
 
-	measure 'Umsatz 12 Monate' = CALCULATE ( [Umsatz gesamt], DATESINPERIOD ( dim_datum[datum], MAX ( dim_datum[datum] ), -12, MONTH ) )
+	measure 'Umsatz 12 Monate' =
+			VAR letzter = CALCULATE ( MAX ( fakt_umsatz[auftragsdatum] ), REMOVEFILTERS () )
+			VAR stichtag = MIN ( MAX ( dim_datum[datum] ), letzter )
+			RETURN IF ( MIN ( dim_datum[datum] ) <= letzter,
+			    CALCULATE ( [Umsatz gesamt], DATESINPERIOD ( dim_datum[datum], stichtag, -12, MONTH ) ) )
 		formatString: \$ #,0
 		displayFolder: Zeitvergleich
 		lineageTag: f09d740a-1ec4-52d6-8c22-c3a6773ca3fd

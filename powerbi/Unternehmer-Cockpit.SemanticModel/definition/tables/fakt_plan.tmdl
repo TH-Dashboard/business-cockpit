@@ -12,15 +12,19 @@ table fakt_plan
 		lineageTag: a1c056d6-95cd-58cf-b42c-ebdb1d92e0c0
 
 	measure 'Umsatz Abweichung %' =
-			VAR p = [Umsatz Plan]
-			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [Umsatz gesamt] - p, p ) )
+			VAR monate = FILTER ( VALUES ( dim_datum[jahr_monat] ), NOT ISBLANK ( [Umsatz gesamt] ) && NOT ISBLANK ( [Umsatz Plan] ) )
+			VAR ist = CALCULATE ( [Umsatz gesamt], monate )
+			VAR p = CALCULATE ( [Umsatz Plan], monate )
+			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( ist - p, p ) )
 		formatString: 0.0 %
 		displayFolder: Plan-Ist
 		lineageTag: ad11286e-f4a3-5632-8e6c-d46cf04404d8
 
 	measure 'DB I Abweichung %' =
-			VAR p = [DB I Plan]
-			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( [DB I] - p, p ) )
+			VAR monate = FILTER ( VALUES ( dim_datum[jahr_monat] ), NOT ISBLANK ( [DB I] ) && NOT ISBLANK ( [DB I Plan] ) )
+			VAR ist = CALCULATE ( [DB I], monate )
+			VAR p = CALCULATE ( [DB I Plan], monate )
+			RETURN IF ( NOT ISBLANK ( p ), DIVIDE ( ist - p, p ) )
 		formatString: 0.0 %
 		displayFolder: Plan-Ist
 		lineageTag: 657a5335-e93d-5434-879f-0e3d324b32f0

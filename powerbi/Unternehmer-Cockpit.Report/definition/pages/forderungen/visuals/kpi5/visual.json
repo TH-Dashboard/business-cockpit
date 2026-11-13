@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "kpi5",
+  "position": {
+    "x": 1020,
+    "y": 96,
+    "z": 6000,
+    "height": 104,
+    "width": 233,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "card",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_umsatz"
+                    }
+                  },
+                  "Property": "Umsatz 12 Monate"
+                }
+              },
+              "queryRef": "fakt_umsatz.Umsatz 12 Monate",
+              "nativeQueryRef": "Umsatz 12 Monate"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

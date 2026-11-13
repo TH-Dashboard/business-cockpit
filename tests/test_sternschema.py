@@ -205,17 +205,66 @@ def test_beziehungen_und_sortierung_im_tmdl(dateien):
     assert "dataCategory: Time" in modell["dim_datum"]["text"] and "\t\tisKey" in modell["dim_datum"]["text"]
 
 
+def _seiten(dateien) -> dict[str, list[dict]]:
+    seiten: dict[str, list[dict]] = {}
+    for p, t in dateien.items():
+        if p.endswith("visual.json"):
+            seiten.setdefault(p.split("/pages/")[1].split("/")[0], []).append(json.loads(t))
+    return seiten
+
+
 def test_bericht_verweist_auf_vorhandene_felder(dateien):
     modell = _tmdl(dateien)
-    visuals = [json.loads(t) for p, t in dateien.items() if p.endswith("visual.json")]
-    assert len(visuals) == 7
-    for v in visuals:
-        for teil in v["visual"]["query"]["queryState"].values():
-            for p in teil["projections"]:
-                (art, f), = p["field"].items()
+    seiten = _seiten(dateien)
+    assert list(seiten) and set(seiten) == {s[0] for s in S.SEITEN}
+    for sid, visuals in seiten.items():
+        for v in visuals:
+            q = v["visual"].get("query", {})
+            felder = [p["field"] for teil in q.get("queryState", {}).values() for p in teil["projections"]]
+            felder += [x["field"] for x in q.get("sortDefinition", {}).get("sort", [])]
+            for feld in felder:
+                (art, f), = feld.items()
                 tab, name = f["Expression"]["SourceRef"]["Entity"], f["Property"]
                 liste = modell[tab]["kennzahlen" if art == "Measure" else "spalten"]
-                assert name in liste, f"{v['name']}: {tab}.{name}"
+                assert name in liste, f"{sid}/{v['name']}: {tab}.{name}"
+
+
+def test_bericht_layout_ohne_ueberlappung(dateien):
+    """Jede Seite: Titel, Filter, 5 Kennzahlkarten, 2 Flächen, Navigation; alles im Rahmen, nichts überdeckt sich."""
+    pages = json.loads(dateien[f"{S.PROJEKT}.Report/definition/pages/pages.json"])
+    assert pages["pageOrder"] == [s[0] for s in S.SEITEN]
+    for sid, visuals in _seiten(dateien).items():
+        typen = [v["visual"]["visualType"] for v in visuals]
+        assert typen.count("pageNavigator") == 1 and typen.count("textbox") == 1, sid
+        assert typen.count("card") == 5 and typen.count("slicer") >= 1, sid
+        kaesten = []
+        for v in visuals:
+            p = v["position"]
+            assert 0 <= p["x"] and p["x"] + p["width"] <= S.BREITE, f"{sid}/{v['name']} zu breit"
+            assert 0 <= p["y"] and p["y"] + p["height"] <= S.HOEHE, f"{sid}/{v['name']} zu hoch"
+            kaesten.append((v["name"], p["x"], p["y"], p["x"] + p["width"], p["y"] + p["height"]))
+        for i, a in enumerate(kaesten):
+            for b in kaesten[i + 1:]:
+                ueber = a[1] < b[3] and b[1] < a[3] and a[2] < b[4] and b[2] < a[4]
+                assert not ueber, f"{sid}: {a[0]} überdeckt {b[0]}"
+
+
+def test_region_filter_nur_wo_zahlen_je_region_gelten():
+    """Fixkosten, Forderungen und Konto haben keine Region; dort darf kein Region-Filter stehen."""
+    ohne_region = {"fakt_fixkosten", "fakt_rechnungen", "fakt_liquiditaet_tag"}
+    for sid, _, _, filter_, kpis, links, rechts, in S.SEITEN:
+        tabellen = {t for t, _ in kpis} | {t for t, _ in links[3]} | {t for t, _ in rechts[3]}
+        if tabellen & ohne_region:
+            assert all(f[0] != "dim_region" for f in filter_), sid
+
+
+def test_theme_in_app_farben(dateien):
+    thema = json.loads(dateien[f"{S.PROJEKT}.Report/StaticResources/RegisteredResources/{S.THEMA_NAME}"])
+    assert thema["dataColors"][:2] == [S.STIL["blau"], S.STIL["orange"]]
+    seite = thema["visualStyles"]["page"]["*"]["background"][0]["color"]["solid"]["color"]
+    assert seite == S.STIL["seite"]
+    report = json.loads(dateien[f"{S.PROJEKT}.Report/definition/report.json"])
+    assert report["themeCollection"]["customTheme"]["name"] == S.THEMA_NAME
 
 
 def test_powerbi_ordner_passt_zum_code(dateien):
@@ -245,3 +294,14 @@ def test_kennzahlen_wie_cockpit_fuer_ein_jahr(alt, stern):
     flach = alt["fakt_umsatz"].query("jahr == 2018")
     assert ebit == pytest.approx(flach.db1.sum() - alt["fakt_fixkosten"].query("monat.dt.year == 2018").ist.sum())
     assert np.isclose(j.db1.sum() / j.umsatz.sum(), flach.db1.sum() / flach.umsatz.sum())
+
+
+def test_diagramme_haben_lesbar_wenige_beschriftungen(stern):
+    """Jede Zahl im Diagramm soll lesbar sein: höchstens 40 Beschriftungen (Kategorien x Reihen) je Diagramm."""
+    for sid, *_, links, rechts in S.SEITEN:
+        for typ, titel, kategorien, kennzahlen, _ in (links, rechts):
+            if typ == "tableEx":
+                continue
+            t, s, _ = kategorien[0]
+            n = stern[t][s].nunique() * len(kennzahlen)
+            assert n <= 40, f"{sid}: '{titel}' hätte {n} Beschriftungen"

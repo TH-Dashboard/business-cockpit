@@ -11,7 +11,7 @@
       }
     },
     "customTheme": {
-      "name": "Cockpit_Pastell.json",
+      "name": "Cockpit_TH.json",
       "type": "RegisteredResources",
       "reportVersionAtImport": {
         "visual": "1.8.96",
@@ -52,8 +52,8 @@
       "type": "RegisteredResources",
       "items": [
         {
-          "name": "Cockpit_Pastell.json",
-          "path": "Cockpit_Pastell.json",
+          "name": "Cockpit_TH.json",
+          "path": "Cockpit_TH.json",
           "type": "CustomTheme"
         }
       ]

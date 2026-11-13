@@ -1,0 +1,113 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "rechts",
+  "position": {
+    "x": 648,
+    "y": 216,
+    "z": 9000,
+    "height": 432,
+    "width": 608,
+    "tabOrder": 9000
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_datum"
+                    }
+                  },
+                  "Property": "jahr_quartal"
+                }
+              },
+              "queryRef": "dim_datum.jahr_quartal",
+              "nativeQueryRef": "jahr_quartal",
+              "displayName": "Quartal",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fakt_plan"
+                    }
+                  },
+                  "Property": "Umsatz Abweichung %"
+                }
+              },
+              "queryRef": "fakt_plan.Umsatz Abweichung %",
+              "nativeQueryRef": "Umsatz Abweichung %"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dim_datum"
+                  }
+                },
+                "Property": "jahr_quartal"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Umsatz-Abweichung zum Plan je Quartal'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,7 +1,12 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json",
   "pageOrder": [
-    "c0c4b1d2e3f4a5b6c7d8"
+    "ueberblick",
+    "planist",
+    "produkte",
+    "regionen",
+    "forderungen",
+    "liquiditaet"
   ],
-  "activePageName": "c0c4b1d2e3f4a5b6c7d8"
+  "activePageName": "ueberblick"
 }

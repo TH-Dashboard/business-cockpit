@@ -59,7 +59,7 @@ Für Power BI baut die App aus denselben Daten ein Sternschema: 5 Faktentabellen
 Plan und Ist treffen sich über gemeinsame Dimensionen (Datum, Region, Kategorie), nie Faktentabelle an Faktentabelle.
 Das fertige Power-BI-Projekt liegt in [`powerbi/`](powerbi/) als Textdateien: Modell in TMDL mit markierter
 Datumstabelle, Beziehungen und 26 DAX-Kennzahlen (Umsatz, DB I, Marge, EBIT, Plan-Abweichung, Vorjahr, YTD, offene
-Forderungen, Forderungslaufzeit, Kontostand), dazu eine Berichtsseite in Pastellfarben.
+Forderungen, Forderungslaufzeit, Kontostand), dazu ein Bericht mit sechs Seiten in den Farben der App (Überblick, Plan-Ist, Produkte, Regionen, Forderungen, Liquidität) mit Kennzahlkarten, Filtern und Seitennavigation.
 
 ![Sternschema](docs/sternschema_de.svg)
 
