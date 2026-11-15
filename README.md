@@ -17,7 +17,7 @@ next and turns every warning into an action – the four questions an owner asks
 The free hosting puts the app to sleep after a while; the first visit can take about 30 seconds.
 
 **Built with** SQL (SQLite, PostgreSQL export), Python, pandas, matplotlib, Streamlit, optionally Power BI Desktop as
-data source · bilingual (German / English) · 21 automated tests.
+data source · bilingual (German / English) · 96 automated tests.
 
 ![60-second tour of the app](docs/tour_en.gif)
 
