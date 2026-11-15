@@ -362,16 +362,16 @@ else:
     # eigene, versteckte Navigation: sonst bleibt das Seitenmenü der letzten Sitzung stehen.
     # Alle Seitenadressen zeigen vor dem Login die Startseite (sonst meldet Streamlit "Page not found",
     # wenn jemand z. B. /aufbereitung neu lädt); nach dem Login öffnet sich die aufgerufene Seite.
-    st.navigation([st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon="🧭", url_path="start",
+    st.navigation([st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon=":material/home:", url_path="start",
                            default=True)]
-                  + [st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon="🧭", url_path=pfad)
+                  + [st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon=":material/home:", url_path=pfad)
                      for pfad in SEITEN_PFADE],
                   position="hidden").run()
     st.stop()
 ROLLE = NUTZER["rolle"]
 
 # ------------------------------------------------------------------ Datenquelle
-st.sidebar.title(T("🧭 Unternehmer-Cockpit", "🧭 Business Cockpit"))
+st.sidebar.title(T("Unternehmer-Cockpit", "Business Cockpit"))
 sprachwahl(st.sidebar)
 a_, b_ = st.sidebar.columns([2, 1])
 a_.caption(f"👤 {NUTZER['name']} · {T(*ROLLEN_TEXT[ROLLE])}" + (f" Unicorn {NUTZER['mandant']}" if NUTZER["mandant"] else ""))
@@ -1696,28 +1696,28 @@ def _bericht(e, name: str) -> str:
 
 
 BERATER_SICHT = modus == "extern" and ROLLE == "berater"
-SEITE_UEBERBLICK = st.Page(ueberblick, title=T("Überblick", "Overview"), icon="🧭", default=not BERATER_SICHT,
+SEITE_UEBERBLICK = st.Page(ueberblick, title=T("Überblick", "Overview"), icon=":material/space_dashboard:", default=not BERATER_SICHT,
                            url_path="ueberblick")
 lage = [SEITE_UEBERBLICK,
-        st.Page(plan_ist, title=T("Plan-Ist", "Plan vs. actual"), icon="📊", url_path="plan_ist"),
-        st.Page(liquiditaet, title=T("Liquidität", "Liquidity"), icon="💧", url_path="liquiditaet"),
-        st.Page(benchmark_seite, title="Benchmark", icon="📐", url_path="benchmark")]
+        st.Page(plan_ist, title=T("Plan-Ist", "Plan vs. actual"), icon=":material/bar_chart:", url_path="plan_ist"),
+        st.Page(liquiditaet, title=T("Liquidität", "Liquidity"), icon=":material/account_balance_wallet:", url_path="liquiditaet"),
+        st.Page(benchmark_seite, title="Benchmark", icon=":material/compare_arrows:", url_path="benchmark")]
 steuern = [
-    st.Page(was_waere_wenn, title=T("Was wäre wenn?", "What if?"), icon="🧪", url_path="was_waere_wenn"),
-    st.Page(fruehwarnung, title=T("Frühwarnung", "Early warning"), icon="🚨", url_path="fruehwarnung"),
-    st.Page(massnahmen_seite, title=T("Maßnahmen", "Actions"), icon="✅", url_path="massnahmen"),
+    st.Page(was_waere_wenn, title=T("Was wäre wenn?", "What if?"), icon=":material/tune:", url_path="was_waere_wenn"),
+    st.Page(fruehwarnung, title=T("Frühwarnung", "Early warning"), icon=":material/notifications:", url_path="fruehwarnung"),
+    st.Page(massnahmen_seite, title=T("Maßnahmen", "Actions"), icon=":material/task_alt:", url_path="massnahmen"),
     st.Page(ki_fragen, title=T("Frag dein Cockpit", "Ask your cockpit")
-            + ("" if ki.schluessel() else T(" (Beispiele)", " (examples)")), icon="💬", url_path="ki"),
-    st.Page(briefing, title=T("Montags-Briefing", "Monday briefing"), icon="✉️", url_path="briefing"),
+            + ("" if ki.schluessel() else T(" (Beispiele)", " (examples)")), icon=":material/chat:", url_path="ki"),
+    st.Page(briefing, title=T("Montags-Briefing", "Monday briefing"), icon=":material/mail:", url_path="briefing"),
 ]
 G_LAGE, G_STEUERN, G_DATEN = T("Lage", "Status"), T("Steuern", "Act"), T("Daten", "Data")
 daten_seiten = {} if ROLLE == "mandant" else {G_DATEN: [
-    st.Page(aufbereitung, title=T("Daten aufbereiten", "Prepare data"), icon="🧹", url_path="aufbereitung")]}
+    st.Page(aufbereitung, title=T("Daten aufbereiten", "Prepare data"), icon=":material/cleaning_services:", url_path="aufbereitung")]}
 if BERATER_SICHT:
     seiten = st.navigation({
         **daten_seiten,
         T("Berater", "Advisor"): [st.Page(mandanten_uebersicht, title=T("Mandanten-Übersicht", "Client overview"),
-                                          icon="🗂️", default=True, url_path="mandanten")],
+                                          icon=":material/groups:", default=True, url_path="mandanten")],
         f"{G_LAGE} · {D_.name}": lage,
         G_STEUERN: steuern,
     })

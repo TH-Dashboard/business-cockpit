@@ -160,9 +160,9 @@ def fixkosten_balken(t: pd.DataFrame, titel: str, gelb_ab: float = 0.05, rot_ab:
     ax.axvline(0, color="#8794A6", lw=1)
     ax.axvline(g, color=FARBE["gelb"], lw=1.4, ls="--", zorder=0)
     ax.axvline(r, color=FARBE["linie_rot"], lw=1.4, ls="--", zorder=0)
-    ax.annotate(T(f"gelb ab +{zahl(g, 0)} %", f"amber from +{zahl(g, 0)}%"), (g, len(t) - 0.3), xytext=(5, 0), textcoords="offset points",
+    ax.annotate(T(f"beobachten ab +{zahl(g, 0)} %", f"watch from +{zahl(g, 0)}%"), (g, len(t) - 0.3), xytext=(5, 0), textcoords="offset points",
                 color="#4B5A6E", fontsize=8, va="bottom", ha="left")
-    ax.annotate(T(f"rot ab +{zahl(r, 0)} %", f"red from +{zahl(r, 0)}%"), (r, len(t) - 0.3), xytext=(5, 0), textcoords="offset points",
+    ax.annotate(T(f"kritisch ab +{zahl(r, 0)} %", f"critical from +{zahl(r, 0)}%"), (r, len(t) - 0.3), xytext=(5, 0), textcoords="offset points",
                 color=FARBE["neg_text"], fontsize=8, va="bottom", ha="left")
     ax.set_yticks(y, [B(k) for k in t.kostenart])
     ax.set_xlim(min(-spann * 0.15, t.abw_proz.min() * 100 * 2.5), max(spann * 1.75, r * 2.3))
@@ -455,8 +455,8 @@ def warn_verlauf(t: pd.DataFrame, n_letzte: int = 3):
         ax.hlines(jetzt, k - 0.4, len(t) - 0.6, color=FARBE["neg_text"], lw=2, ls="-", zorder=1.5,
                   label=T(f"Ø letzte {n_letzte} Monate: {zahl(jetzt, 1)}", f"avg. last {n_letzte} months: {zahl(jetzt, 1)}"))
         linie[:k], linie[k:] = vor, jetzt
-    ax.bar(x, t.rot, color=FARBE["schlecht"], width=0.62, label=T("rot", "red"), zorder=2)
-    ax.bar(x, t.gelb, bottom=t.rot, color=FARBE["gelb"], width=0.62, label=T("gelb", "amber"), zorder=2)
+    ax.bar(x, t.rot, color=FARBE["schlecht"], width=0.62, label=T("kritisch", "critical"), zorder=2)
+    ax.bar(x, t.gelb, bottom=t.rot, color=FARBE["gelb"], width=0.62, label=T("beobachten", "watch"), zorder=2)
     for xi, r, g in zip(x, t.rot, t.gelb):
         if r:
             ax.text(xi, r / 2, str(r), ha="center", va="center", fontsize=9, fontweight="bold", color="white")
