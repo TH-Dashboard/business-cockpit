@@ -59,12 +59,13 @@ DEMO = _demo()
 UPLOAD_MAX_MB = 20                                   # Grenze für Uploads; gleich wie server.maxUploadSize in .streamlit/config.toml
 POWERBI_MOEGLICH = os.name == "nt" and not DEMO      # Power BI Desktop gibt es nur lokal unter Windows
 
-# Farben aus der Unicorn-Präsentation (Corporate Identity)
-NAVY, BLAU, HELLBLAU, ORANGE, GRAU = "#0A2342", "#1A63B7", "#7DB9FF", "#F28C28", "#3D5470"
-AMPEL_RAND = {"grün": "#2E9E5B", "gelb": "#F28C28", "rot": "#D0435E"}
-AMPEL_TEXT = {"grün": "#2E7348", "gelb": "#A84F0F", "rot": "#9A3550"}
+# Design „Navy · Seitenleiste“: Navy, neutrale Grautöne, Rot nur für Werte unter Plan
+NAVY, NAVY_AKTIV, GRAU, RAND, FLAECHE = "#0F2A4A", "#1B3A60", "#4B5A6E", "#E3E7ED", "#F6F7F9"
+ROT = "#B42318"
+AMPEL_RAND = {"grün": RAND, "gelb": "#9AA6B6", "rot": ROT}
+AMPEL_TEXT = {"grün": GRAU, "gelb": ROT, "rot": ROT}
 # Ampel mit Form UND Farbe, damit sie auch bei Rot-Grün-Schwäche lesbar ist
-AMPEL_PUNKT = {"grün": "✅", "gelb": "⚠️", "rot": "⛔"}
+AMPEL_PUNKT = {"grün": "✓", "gelb": "!", "rot": "✕"}
 
 
 def datenfehler(e: Exception):
@@ -94,38 +95,41 @@ st.markdown(f"""
 <style>
 html, body, [class*="css"] {{font-family: "Inter", "Segoe UI", Arial, sans-serif;}}
 [data-testid="stSidebar"] {{background: {NAVY};}}
-[data-testid="stSidebar"] * {{color: #F2F6FB !important;}}
+[data-testid="stSidebar"] * {{color: #DCE3EC !important;}}
 [data-testid="stSidebar"] h1 {{color: #FFFFFF !important;}}
-[data-testid="stSidebarNav"] a[aria-current="page"] span {{color: {ORANGE} !important; font-weight: 700;}}
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="group"], [data-testid="stSidebar"] [data-baseweb="select"] > div {{background: #1B3A63 !important; border: 1px solid #3E5E88 !important; border-radius: 8px;}}
+[data-testid="stSidebarNav"] a {{border-radius: 8px;}}
+[data-testid="stSidebarNav"] a[aria-current="page"] {{background: {NAVY_AKTIV} !important;}}
+[data-testid="stSidebarNav"] a[aria-current="page"] span {{color: #FFFFFF !important; font-weight: 600;}}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="group"], [data-testid="stSidebar"] [data-baseweb="select"] > div {{background: {NAVY_AKTIV} !important; border: 1px solid #2E4B70 !important; border-radius: 8px;}}
 [data-testid="stSidebar"] [data-testid="stSelectbox"] input, [data-testid="stSidebar"] [data-testid="stSelectbox"] svg, [data-testid="stSidebar"] [data-baseweb="select"] * {{color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; opacity: 1 !important; background: transparent;}}
-[data-testid="stSidebar"] [data-testid="stAlertContainer"] {{background: rgba(255,255,255,0.08) !important; border: 1px solid #3E5E88 !important;}}
-[data-testid="stSidebar"] [data-testid="stAlertContainer"] * {{color: #F2F6FB !important; -webkit-text-fill-color: #F2F6FB !important; opacity: 1 !important;}}
-h1, h2, h3 {{color: {NAVY} !important; font-weight: 800 !important;}}
-[data-testid="stApp"], [data-testid="stHeader"] {{background: #E2E8F1 !important;}}
+[data-testid="stSidebar"] [data-testid="stAlertContainer"] {{background: rgba(255,255,255,0.06) !important; border: 1px solid #2E4B70 !important;}}
+[data-testid="stSidebar"] [data-testid="stAlertContainer"] * {{color: #DCE3EC !important; -webkit-text-fill-color: #DCE3EC !important; opacity: 1 !important;}}
+h1, h2, h3 {{color: {NAVY} !important; font-weight: 600 !important; letter-spacing: -0.01em;}}
+[data-testid="stApp"], [data-testid="stHeader"] {{background: {FLAECHE} !important;}}
 [data-testid="stMain"] p, [data-testid="stMain"] li {{color: {NAVY};}}
-[data-testid="stMain"] [data-testid^="stBaseButton-primary"] p {{color: #FFFFFF !important; font-weight: 700;}}
-[data-testid="stSidebar"] button:not([data-testid="stBaseButton-headerNoPadding"]) {{background: #1B3A63 !important; border: 1px solid #3E5E88 !important;}}
+[data-testid="stMain"] [data-testid^="stBaseButton-primary"] p {{color: #FFFFFF !important; font-weight: 600;}}
+[data-testid="stSidebar"] button:not([data-testid="stBaseButton-headerNoPadding"]) {{background: {NAVY_AKTIV} !important; border: 1px solid #2E4B70 !important;}}
 [data-testid="stSidebar"] button[kind*="Active"], [data-testid="stSidebar"] button[aria-checked="true"],
-[data-testid="stSidebar"] button[aria-pressed="true"] {{background: {ORANGE} !important; border-color: {ORANGE} !important;}}
-[data-testid="stMain"] [data-testid="stCaptionContainer"], [data-testid="stMain"] [data-testid="stCaptionContainer"] * {{color: #3D5470 !important; opacity: 1 !important;}}
-[data-testid="stSidebar"] [data-testid="stCaptionContainer"], [data-testid="stSidebar"] [data-testid="stCaptionContainer"] * {{color: #C9D6E8 !important; opacity: 1 !important;}}
-[data-testid="stMetric"] {{background: #FFFFFF; border-radius: 10px; border: 1px solid #C3CEDC; border-top: 4px solid {BLAU}; padding: 0.6rem 0.8rem; box-shadow: 0 6px 18px rgba(10,35,66,0.24);}}
-[data-testid="stMetricLabel"] * {{color: {GRAU} !important; font-weight: 600 !important; font-size: 0.85rem !important;}}
-[data-testid="stMetricValue"], [data-testid="stMetricValue"] * {{font-size: clamp(1.05rem, 1.6vw, 1.6rem) !important; font-weight: 700 !important; color: {BLAU} !important; overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;}}
-.eyebrow {{color: {BLAU}; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em;
-           text-transform: uppercase; margin-bottom: -0.6rem;}}
-.lage {{background: #FFFFFF; border: 1px solid #C3CEDC; box-shadow: 0 6px 18px rgba(10,35,66,0.24); border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; color: #0E2949;}}
-.badge-modus {{display: inline-block; background: #FDE6D2; color: #8A4A12; border: 1px solid #F6A25E; border-radius: 999px; padding: 3px 12px; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;}}
-.kachel {{background: #FFFFFF; border: 1px solid #C3CEDC; box-shadow: 0 6px 18px rgba(10,35,66,0.24); border-radius: 12px; padding: 14px 16px; border-top: 6px solid; margin-bottom: 8px;}}
-.kachel .name {{font-size: 0.85rem; font-weight: 600; color: {GRAU};}}
-.kachel .wert {{font-size: clamp(1.05rem, 1.7vw, 1.7rem); font-weight: 700; color: {BLAU}; line-height: 1.3; white-space: nowrap;}}
-.kachel .sub {{font-size: 0.82rem; font-weight: 600; color: {NAVY};}}
-.signal {{background: #FFFFFF; border: 1px solid #C3CEDC; box-shadow: 0 4px 12px rgba(10,35,66,0.22); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; border-left: 6px solid;}}
-.signal b {{color: #0E2949;}}
-.aussage {{font-size: 0.95rem; color: {NAVY}; background: #FFFFFF; border: 1px solid #C3CEDC; border-left: 5px solid #E07F2E;
-          border-radius: 8px; padding: 8px 12px; margin: -4px 0 18px 0;}}
-[data-testid="stImage"] img, [data-testid="stPyplot"] img {{border-radius: 12px; border: 1px solid #C3CEDC; box-shadow: 0 6px 18px rgba(10,35,66,0.24);}}
+[data-testid="stSidebar"] button[aria-pressed="true"] {{background: #FFFFFF !important; border-color: #FFFFFF !important;}}
+[data-testid="stSidebar"] button[kind*="Active"] *, [data-testid="stSidebar"] button[aria-checked="true"] *,
+[data-testid="stSidebar"] button[aria-pressed="true"] * {{color: {NAVY} !important;}}
+[data-testid="stMain"] [data-testid="stCaptionContainer"], [data-testid="stMain"] [data-testid="stCaptionContainer"] * {{color: {GRAU} !important; opacity: 1 !important;}}
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"], [data-testid="stSidebar"] [data-testid="stCaptionContainer"] * {{color: #AEB9C9 !important; opacity: 1 !important;}}
+[data-testid="stMetric"] {{background: #FFFFFF; border-radius: 12px; border: 1px solid {RAND}; padding: 0.9rem 1.1rem;}}
+[data-testid="stMetricLabel"] * {{color: {GRAU} !important; font-weight: 500 !important; font-size: 0.95rem !important;}}
+[data-testid="stMetricValue"], [data-testid="stMetricValue"] * {{font-size: clamp(1.3rem, 2vw, 2rem) !important; font-weight: 600 !important; color: {NAVY} !important; font-variant-numeric: tabular-nums; overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important;}}
+.eyebrow {{color: {GRAU}; font-size: 0.95rem; font-weight: 500; margin-bottom: -0.6rem;}}
+.lage {{font-size: 1.2rem; font-weight: 500; line-height: 1.6; color: {NAVY}; max-width: 54rem; margin: 0.2rem 0 1.4rem 0;}}
+.badge-modus {{display: inline-block; background: #EEF1F5; color: {GRAU}; border: 1px solid {RAND}; border-radius: 999px; padding: 3px 12px; font-size: 0.9rem; font-weight: 500; margin-bottom: 10px;}}
+.kachel {{background: #FFFFFF; border: 1px solid {RAND} !important; border-radius: 12px; padding: 18px 20px; margin-bottom: 8px;}}
+.kachel .name {{font-size: 0.95rem; font-weight: 500; color: {GRAU};}}
+.kachel .wert {{font-size: clamp(1.4rem, 2.2vw, 2.1rem); font-weight: 600; color: {NAVY}; letter-spacing: -0.02em; line-height: 1.35; white-space: nowrap; font-variant-numeric: tabular-nums;}}
+.kachel .sub {{font-size: 0.9rem; font-weight: 600; color: {NAVY};}}
+.signal {{background: #FFFFFF; border: 1px solid {RAND}; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; border-left: 3px solid;}}
+.signal b {{color: {NAVY};}}
+.aussage {{font-size: 0.95rem; color: {NAVY}; background: #FFFFFF; border: 1px solid {RAND}; border-left: 3px solid {NAVY};
+          border-radius: 8px; padding: 10px 14px; margin: -4px 0 18px 0;}}
+[data-testid="stImage"] img, [data-testid="stPyplot"] img {{border-radius: 12px; border: 1px solid {RAND};}}
 </style>""", unsafe_allow_html=True)
 
 
@@ -264,7 +268,7 @@ def startseite(zug: dict):
            f"Some business customers recently pay 30–60 days later.")),
     ]
     for spalte, (titel, text) in zip(c, karten):
-        spalte.markdown(f'<div class="kachel" style="border-color:{ORANGE}"><div class="wert" style="white-space:normal;'
+        spalte.markdown(f'<div class="kachel"><div class="wert" style="white-space:normal;'
                         f'font-size:1.05rem">{titel}</div><div class="sub" style="font-weight:500">{text}</div></div>',
                         unsafe_allow_html=True)
 
@@ -358,16 +362,16 @@ else:
     # eigene, versteckte Navigation: sonst bleibt das Seitenmenü der letzten Sitzung stehen.
     # Alle Seitenadressen zeigen vor dem Login die Startseite (sonst meldet Streamlit "Page not found",
     # wenn jemand z. B. /aufbereitung neu lädt); nach dem Login öffnet sich die aufgerufene Seite.
-    st.navigation([st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon="🧭", url_path="start",
+    st.navigation([st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon=":material/home:", url_path="start",
                            default=True)]
-                  + [st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon="🧭", url_path=pfad)
+                  + [st.Page(lambda: startseite(_zug), title=T("Start", "Start"), icon=":material/home:", url_path=pfad)
                      for pfad in SEITEN_PFADE],
                   position="hidden").run()
     st.stop()
 ROLLE = NUTZER["rolle"]
 
 # ------------------------------------------------------------------ Datenquelle
-st.sidebar.title(T("🧭 Unternehmer-Cockpit", "🧭 Business Cockpit"))
+st.sidebar.title(T("Unternehmer-Cockpit", "Business Cockpit"))
 sprachwahl(st.sidebar)
 a_, b_ = st.sidebar.columns([2, 1])
 a_.caption(f"👤 {NUTZER['name']} · {T(*ROLLEN_TEXT[ROLLE])}" + (f" Unicorn {NUTZER['mandant']}" if NUTZER["mandant"] else ""))
@@ -550,7 +554,7 @@ def benchmark(s, q=None):
 def zeige(fig, aussage: str):
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
-    st.markdown(f'<div class="aussage">💬 {aussage}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="aussage">{aussage}</div>', unsafe_allow_html=True)
 
 
 def sql_zeigen(namen: list[str], s):
@@ -595,14 +599,14 @@ def delta(wert: float, text: str):
 
 def kachel(spalte, name, wert, sub, stufe):
     spalte.markdown(
-        f'<div class="kachel" style="border-color:{AMPEL_RAND[stufe]}">'
+        f'<div class="kachel">'
         f'<div class="name">{AMPEL_PUNKT[stufe]} {name}</div><div class="wert">{wert}</div>'
         f'<div class="sub" style="color:{AMPEL_TEXT[stufe]}">{sub}</div></div>', unsafe_allow_html=True)
 
 
 def signal_box(x: L.Signal):
     st.markdown(
-        f'<div class="signal" style="border-color:{AMPEL_RAND[x.stufe]}">'
+        f'<div class="signal" style="border-left-color:{AMPEL_RAND[x.stufe]}">'
         f'{AMPEL_PUNKT[x.stufe]} <b>{x.titel}</b> <span style="color:{GRAU}">· {S.B(x.bereich)}</span><br>{x.text}</div>',
         unsafe_allow_html=True)
 
@@ -630,11 +634,11 @@ def ueberblick():
            T(f"Tief in 13 Wochen {L.geld(prog['minimum'])} · Puffer {L.geld(prog['puffer'])}",
              f"Low in 13 weeks {L.geld(prog['minimum'])} · buffer {L.geld(prog['puffer'])}"), L.liq_ampel(prog))
     g = L.zahl(-L.AMPEL_GELB * 100, 1).replace(",0", "").replace(".0", "")
-    st.caption(T(f"Ampel: grün = auf oder über Plan · gelb = bis {g} % darunter · rot = mehr als {g} % darunter. "
-                 f"Kontostand: rot unter 0, gelb unter Puffer ({L.zahl(L.PUFFER_MONATE, 1)} Monat(e) Fixkosten + Entnahme). "
+    st.caption(T(f"Status: ✓ = auf oder über Plan · ! = bis {g} % darunter · ✕ = mehr als {g} % darunter. "
+                 f"Kontostand: ✕ unter 0, ! unter Puffer ({L.zahl(L.PUFFER_MONATE, 1)} Monat(e) Fixkosten + Entnahme). "
                  "Schwellen änderst du unter Frühwarnung.",
-                 f"Traffic light: green = on or above plan · amber = up to {g}% below · red = more than {g}% below. "
-                 f"Bank balance: red below 0, amber below buffer ({L.zahl(L.PUFFER_MONATE, 1)} month(s) of fixed costs + owner drawings). "
+                 f"Status: ✓ = on or above plan · ! = up to {g}% below · ✕ = more than {g}% below. "
+                 f"Bank balance: ✕ below 0, ! below buffer ({L.zahl(L.PUFFER_MONATE, 1)} month(s) of fixed costs + owner drawings). "
                  "Thresholds can be changed under Early warning."))
 
     links, rechts = st.columns([3, 2])
@@ -1114,8 +1118,8 @@ def ki_fragen():
     fakten = ki.faktenzettel(D_, s, M.laden())
     fragen = beispiele()
     if not ki.schluessel():
-        st.markdown(T('<span class="badge-modus">🔧 Modus: Beispielantworten, regelbasiert – keine KI angebunden</span>',
-                      '<span class="badge-modus">🔧 Mode: example answers, rule-based – no AI connected</span>'),
+        st.markdown(T('<span class="badge-modus">Modus: Beispielantworten, regelbasiert – keine KI angebunden</span>',
+                      '<span class="badge-modus">Mode: example answers, rule-based – no AI connected</span>'),
                     unsafe_allow_html=True)
         if DEMO:
             st.info(T("In der Online-Demo ist keine KI angebunden. Unten siehst du, welche Art Antwort das Fragefeld "
@@ -1692,28 +1696,28 @@ def _bericht(e, name: str) -> str:
 
 
 BERATER_SICHT = modus == "extern" and ROLLE == "berater"
-SEITE_UEBERBLICK = st.Page(ueberblick, title=T("Überblick", "Overview"), icon="🧭", default=not BERATER_SICHT,
+SEITE_UEBERBLICK = st.Page(ueberblick, title=T("Überblick", "Overview"), icon=":material/space_dashboard:", default=not BERATER_SICHT,
                            url_path="ueberblick")
 lage = [SEITE_UEBERBLICK,
-        st.Page(plan_ist, title=T("Plan-Ist", "Plan vs. actual"), icon="📊", url_path="plan_ist"),
-        st.Page(liquiditaet, title=T("Liquidität", "Liquidity"), icon="💧", url_path="liquiditaet"),
-        st.Page(benchmark_seite, title="Benchmark", icon="📐", url_path="benchmark")]
+        st.Page(plan_ist, title=T("Plan-Ist", "Plan vs. actual"), icon=":material/bar_chart:", url_path="plan_ist"),
+        st.Page(liquiditaet, title=T("Liquidität", "Liquidity"), icon=":material/account_balance_wallet:", url_path="liquiditaet"),
+        st.Page(benchmark_seite, title="Benchmark", icon=":material/compare_arrows:", url_path="benchmark")]
 steuern = [
-    st.Page(was_waere_wenn, title=T("Was wäre wenn?", "What if?"), icon="🧪", url_path="was_waere_wenn"),
-    st.Page(fruehwarnung, title=T("Frühwarnung", "Early warning"), icon="🚨", url_path="fruehwarnung"),
-    st.Page(massnahmen_seite, title=T("Maßnahmen", "Actions"), icon="✅", url_path="massnahmen"),
+    st.Page(was_waere_wenn, title=T("Was wäre wenn?", "What if?"), icon=":material/tune:", url_path="was_waere_wenn"),
+    st.Page(fruehwarnung, title=T("Frühwarnung", "Early warning"), icon=":material/notifications:", url_path="fruehwarnung"),
+    st.Page(massnahmen_seite, title=T("Maßnahmen", "Actions"), icon=":material/task_alt:", url_path="massnahmen"),
     st.Page(ki_fragen, title=T("Frag dein Cockpit", "Ask your cockpit")
-            + ("" if ki.schluessel() else T(" (Beispiele)", " (examples)")), icon="💬", url_path="ki"),
-    st.Page(briefing, title=T("Montags-Briefing", "Monday briefing"), icon="✉️", url_path="briefing"),
+            + ("" if ki.schluessel() else T(" (Beispiele)", " (examples)")), icon=":material/chat:", url_path="ki"),
+    st.Page(briefing, title=T("Montags-Briefing", "Monday briefing"), icon=":material/mail:", url_path="briefing"),
 ]
 G_LAGE, G_STEUERN, G_DATEN = T("Lage", "Status"), T("Steuern", "Act"), T("Daten", "Data")
 daten_seiten = {} if ROLLE == "mandant" else {G_DATEN: [
-    st.Page(aufbereitung, title=T("Daten aufbereiten", "Prepare data"), icon="🧹", url_path="aufbereitung")]}
+    st.Page(aufbereitung, title=T("Daten aufbereiten", "Prepare data"), icon=":material/cleaning_services:", url_path="aufbereitung")]}
 if BERATER_SICHT:
     seiten = st.navigation({
         **daten_seiten,
         T("Berater", "Advisor"): [st.Page(mandanten_uebersicht, title=T("Mandanten-Übersicht", "Client overview"),
-                                          icon="🗂️", default=True, url_path="mandanten")],
+                                          icon=":material/groups:", default=True, url_path="mandanten")],
         f"{G_LAGE} · {D_.name}": lage,
         G_STEUERN: steuern,
     })

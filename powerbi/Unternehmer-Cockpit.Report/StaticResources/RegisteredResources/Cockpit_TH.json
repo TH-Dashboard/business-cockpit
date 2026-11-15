@@ -1,41 +1,41 @@
 {
   "name": "Cockpit TH",
   "dataColors": [
-    "#1A63B7",
-    "#F28C28",
-    "#7DB9FF",
-    "#2E9E5B",
-    "#0A2342",
-    "#D0435E",
-    "#9FB4CC",
-    "#F6B98A"
+    "#5B7499",
+    "#8A9BB5",
+    "#D5DCE6",
+    "#7A8FB0",
+    "#0F2A4A",
+    "#E7A3A0",
+    "#AEB9C9",
+    "#C9D1DC"
   ],
-  "foreground": "#0A2342",
-  "foregroundNeutralSecondary": "#3D5470",
+  "foreground": "#0F2A4A",
+  "foregroundNeutralSecondary": "#4B5A6E",
   "background": "#FFFFFF",
-  "backgroundLight": "#F5F8FC",
-  "backgroundNeutral": "#C3CEDC",
-  "tableAccent": "#1A63B7",
-  "good": "#2E9E5B",
-  "neutral": "#F28C28",
-  "bad": "#D0435E",
-  "maximum": "#1A63B7",
-  "center": "#7DB9FF",
-  "minimum": "#D0435E",
+  "backgroundLight": "#F8F9FB",
+  "backgroundNeutral": "#E3E7ED",
+  "tableAccent": "#5B7499",
+  "good": "#7A8FB0",
+  "neutral": "#8A9BB5",
+  "bad": "#E7A3A0",
+  "maximum": "#5B7499",
+  "center": "#D5DCE6",
+  "minimum": "#E7A3A0",
   "textClasses": {
     "title": {
       "fontFace": "Segoe UI Semibold",
-      "color": "#0A2342",
+      "color": "#0F2A4A",
       "fontSize": 12
     },
     "label": {
       "fontFace": "Segoe UI",
-      "color": "#3D5470",
+      "color": "#4B5A6E",
       "fontSize": 10
     },
     "callout": {
       "fontFace": "Segoe UI Semibold",
-      "color": "#1A63B7",
+      "color": "#5B7499",
       "fontSize": 26
     }
   },
@@ -46,7 +46,7 @@
           {
             "color": {
               "solid": {
-                "color": "#E2E8F1"
+                "color": "#F6F7F9"
               }
             },
             "transparency": 0
@@ -56,7 +56,7 @@
           {
             "color": {
               "solid": {
-                "color": "#E2E8F1"
+                "color": "#F6F7F9"
               }
             },
             "transparency": 0
@@ -82,7 +82,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#C3CEDC"
+                "color": "#E3E7ED"
               }
             },
             "radius": 12
@@ -93,7 +93,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "position": "Outer",
@@ -110,7 +110,7 @@
             "show": true,
             "fontColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontSize": 12,
@@ -151,7 +151,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#C3CEDC"
+                "color": "#E3E7ED"
               }
             },
             "radius": 12
@@ -162,7 +162,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "position": "Outer",
@@ -196,7 +196,7 @@
           {
             "color": {
               "solid": {
-                "color": "#1A63B7"
+                "color": "#5B7499"
               }
             },
             "fontSize": 24,
@@ -209,7 +209,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "fontSize": 11
@@ -272,7 +272,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#C3CEDC"
+                "color": "#E3E7ED"
               }
             },
             "radius": 12
@@ -283,7 +283,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "position": "Outer",
@@ -318,7 +318,7 @@
             "show": true,
             "fontColor": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "textSize": 10,
@@ -329,7 +329,7 @@
           {
             "fontColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "textSize": 11
@@ -386,7 +386,7 @@
             "$id": "hover",
             "fillColor": {
               "solid": {
-                "color": "#E8EEF6"
+                "color": "#EEF1F5"
               }
             }
           },
@@ -394,7 +394,7 @@
             "$id": "selected",
             "fillColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             }
           }
@@ -404,7 +404,7 @@
             "$id": "default",
             "fontColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "bold": true,
@@ -425,7 +425,7 @@
             "show": true,
             "lineColor": {
               "solid": {
-                "color": "#1A63B7"
+                "color": "#5B7499"
               }
             },
             "weight": 1,
@@ -435,7 +435,7 @@
             "$id": "selected",
             "lineColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             }
           }
@@ -448,12 +448,12 @@
           {
             "backColor": {
               "solid": {
-                "color": "#E8EEF6"
+                "color": "#EEF1F5"
               }
             },
             "fontColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "bold": true,
@@ -469,17 +469,17 @@
             },
             "backColorSecondary": {
               "solid": {
-                "color": "#F5F8FC"
+                "color": "#F8F9FB"
               }
             },
             "fontColorPrimary": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontColorSecondary": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontSize": 10
@@ -489,12 +489,12 @@
           {
             "backColor": {
               "solid": {
-                "color": "#FDE6D2"
+                "color": "#EEF1F5"
               }
             },
             "fontColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "bold": true
@@ -515,12 +515,12 @@
           {
             "backColor": {
               "solid": {
-                "color": "#E8EEF6"
+                "color": "#EEF1F5"
               }
             },
             "fontColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "bold": true,
@@ -536,17 +536,17 @@
             },
             "backColorSecondary": {
               "solid": {
-                "color": "#F5F8FC"
+                "color": "#F8F9FB"
               }
             },
             "fontColorPrimary": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontColorSecondary": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontSize": 10
@@ -556,12 +556,12 @@
           {
             "backColor": {
               "solid": {
-                "color": "#FDE6D2"
+                "color": "#EEF1F5"
               }
             },
             "fontColor": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "bold": true
@@ -582,7 +582,7 @@
           {
             "labelColor": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "fontSize": 10,
@@ -601,7 +601,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontSize": 11,
@@ -615,7 +615,7 @@
             "position": "Top",
             "labelColor": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "fontSize": 10
@@ -629,7 +629,7 @@
           {
             "labelColor": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "fontSize": 10,
@@ -648,7 +648,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontSize": 11,
@@ -662,7 +662,7 @@
             "position": "Top",
             "labelColor": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "fontSize": 10
@@ -676,7 +676,7 @@
           {
             "labelColor": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "fontSize": 10,
@@ -695,7 +695,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#0A2342"
+                "color": "#0F2A4A"
               }
             },
             "fontSize": 10,
@@ -716,7 +716,7 @@
             "position": "Top",
             "labelColor": {
               "solid": {
-                "color": "#3D5470"
+                "color": "#4B5A6E"
               }
             },
             "fontSize": 10
