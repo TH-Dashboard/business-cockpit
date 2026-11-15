@@ -8,7 +8,8 @@ HIER = Path(__file__).resolve().parent
 sys.path.insert(0, str(HIER.parent))
 import logik as L  # noqa: E402
 
-ECHT, SIM, DIM = "#DCEBFF", "#FDE6D2", "#E3F2E8"
+ECHT, SIM, DIM = "#0F2A4A", "#D5DCE6", "#F1F3F6"   # Navy-Design: echt dunkel, simuliert hell, Dimension grau
+KOPF_TEXT = {ECHT: ("white", "#C3CDDA")}          # Titel- und Untertitelfarbe im dunklen Kopf
 TAB = {   # Tabelle: (Farbe, Text DE, Text EN, gezeigte Spalten)
     "fakt_umsatz": (ECHT, "eine Zeile je Auftragsposition · echt", "one row per order line · real",
                     ["position_id", "auftrag_id", "monat", "region", "kategorie", "kunde_id", "produkt_id",
@@ -38,21 +39,22 @@ KANTEN = [   # (von, Spalte, nach, Spalte, Beschriftung DE, EN, gestrichelt = lo
 def dot(sprache: str, zeilen: dict) -> str:
     en = sprache == "en"
     out = ['digraph G {', 'graph [rankdir=LR, bgcolor="white", pad=0.3, nodesep=0.35, ranksep=1.1, '
-           'fontname="Helvetica", fontsize=12, fontcolor="#0A2342", labelloc=t, labeljust=l, label=<'
-           + ("<b>Data model · Unicorn cockpit (SQLite)</b><br/><font point-size='10' color='#556F8E'>"
-              "blue = real sample data · orange = simulated · green = dimension · * simulated column · "
+           'fontname="Helvetica", fontsize=12, fontcolor="#0F2A4A", labelloc=t, labeljust=l, label=<'
+           + ("<b>Data model · Unicorn cockpit (SQLite)</b><br/><font point-size='10' color='#4B5A6E'>"
+              "navy = real sample data · light blue = simulated · grey = dimension · * simulated column · "
               "dashed = join on shared keys, no ID</font>" if en else
-              "<b>Datenmodell · Unicorn-Cockpit (SQLite)</b><br/><font point-size='10' color='#556F8E'>"
-              "blau = echte Beispieldaten · orange = simuliert · grün = Dimension · * simulierte Spalte · "
+              "<b>Datenmodell · Unicorn-Cockpit (SQLite)</b><br/><font point-size='10' color='#4B5A6E'>"
+              "Navy = echte Beispieldaten · hellblau = simuliert · grau = Dimension · * simulierte Spalte · "
               "gestrichelt = Verknüpfung über gemeinsame Schlüssel, keine ID</font>") + '>];',
-           'node [shape=plain, fontname="Helvetica", fontsize=10, fontcolor="#0A2342"];',
-           'edge [color="#556F8E", fontname="Helvetica", fontsize=9, fontcolor="#556F8E", arrowsize=0.7];']
+           'node [shape=plain, fontname="Helvetica", fontsize=10, fontcolor="#0F2A4A"];',
+           'edge [color="#4B5A6E", fontname="Helvetica", fontsize=9, fontcolor="#4B5A6E", arrowsize=0.7];']
     for t, (farbe, de, en_txt, spalten) in TAB.items():
+        kopf, unter = KOPF_TEXT.get(farbe, ("#0F2A4A", "#4B5A6E"))
         n = f"{zeilen[t]:,}".replace(",", "." if not en else ",")
         z = "".join(f'<tr><td port="{c.rstrip("*")}" align="left" bgcolor="white">{c}</td></tr>' for c in spalten)
-        out.append(f'{t} [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#8FA3BC">'
-                   f'<tr><td bgcolor="{farbe}" align="left"><b>{t}</b></td></tr>'
-                   f'<tr><td bgcolor="{farbe}" align="left"><font point-size="8.5" color="#556F8E">'
+        out.append(f'{t} [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" color="#9AA6B6">'
+                   f'<tr><td bgcolor="{farbe}" align="left"><font color="{kopf}"><b>{t}</b></font></td></tr>'
+                   f'<tr><td bgcolor="{farbe}" align="left"><font point-size="8.5" color="{unter}">'
                    f'{en_txt if en else de} · {n} {"rows" if en else "Zeilen"}</font></td></tr>{z}</table>>];')
     for a, ca, b, cb, de, en_txt, gestr in KANTEN:
         if gestr:
