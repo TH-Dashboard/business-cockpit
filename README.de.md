@@ -18,7 +18,7 @@ Fragen, die sich eine Unternehmerin jeden Montag stellt:
 Das kostenlose Hosting legt die App nach einer Weile schlafen; der erste Aufruf kann rund 30 Sekunden dauern.
 
 **Gebaut mit** SQL (SQLite, Export aus PostgreSQL), Python, pandas, matplotlib, Streamlit, optional Power BI Desktop
-als Datenquelle · zweisprachig (Deutsch/Englisch) · 21 automatische Tests.
+als Datenquelle · zweisprachig (Deutsch/Englisch) · 96 automatische Tests.
 
 ![Rundgang durch die App in 60 Sekunden](docs/tour_de.gif)
 
