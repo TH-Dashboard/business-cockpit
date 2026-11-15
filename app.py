@@ -606,7 +606,7 @@ def kachel(spalte, name, wert, sub, stufe):
 
 def signal_box(x: L.Signal):
     st.markdown(
-        f'<div class="signal" style="border-color:{AMPEL_RAND[x.stufe]}">'
+        f'<div class="signal" style="border-left-color:{AMPEL_RAND[x.stufe]}">'
         f'{AMPEL_PUNKT[x.stufe]} <b>{x.titel}</b> <span style="color:{GRAU}">· {S.B(x.bereich)}</span><br>{x.text}</div>',
         unsafe_allow_html=True)
 
