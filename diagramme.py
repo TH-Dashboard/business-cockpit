@@ -25,16 +25,16 @@ def _tm(d) -> str:
     """Tag und Monat kurz: 01.04. bzw. 01 Apr"""
     return d.strftime(T("%d.%m.", "%d %b"))
 
-# Farben aus der Unicorn-Präsentation (Corporate Identity)
+# Farben: ruhiges Navy, Grau, Rot nur für Werte unter Plan (Design „Navy · Seitenleiste“)
 CI = {
-    "navy": "#0A2342", "titel": "#0E2949", "blau": "#1A63B7", "hellblau": "#7DB9FF",
-    "orange": "#F6A25E", "orange_text": "#C86419", "grau_text": "#556F8E",
-    "hintergrund": "#F1F4F9", "karte": "#FFFFFF",
+    "navy": "#0F2A4A", "titel": "#0F2A4A", "blau": "#5B7499", "hellblau": "#D5DCE6",
+    "orange": "#C3CDDA", "orange_text": "#4B5A6E", "grau_text": "#8794A6",
+    "hintergrund": "#F6F7F9", "karte": "#FFFFFF",
 }
 FARBE = {
-    "ist": CI["blau"], "plan": "#7DB9FF", "gut": "#2E9E5B", "schlecht": "#D0435E",
-    "gelb": "#F28C28", "lila": CI["blau"], "dichte": CI["navy"], "text": CI["navy"],
-    "linie_rot": "#9A3550", "grau": "#556F8E", "pos_text": "#2E7348", "neg_text": "#9A3550",
+    "ist": CI["blau"], "plan": "#D5DCE6", "gut": "#7A8FB0", "schlecht": "#E7A3A0",
+    "gelb": "#8A9BB5", "lila": CI["blau"], "dichte": CI["navy"], "text": CI["navy"],
+    "linie_rot": "#B42318", "grau": "#8794A6", "pos_text": "#3D4B5E", "neg_text": "#B42318",
 }
 MONATE_DE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
 MONATE_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -42,9 +42,9 @@ MONATE_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct
 plt.rcParams.update({
     "font.family": ["Inter", "Segoe UI", "Arial", "DejaVu Sans"],
     "font.size": 10, "axes.spines.top": False, "axes.spines.right": False,
-    "axes.edgecolor": "#556F8E", "axes.labelcolor": FARBE["text"], "axes.linewidth": 1.0,
-    "patch.force_edgecolor": True, "patch.edgecolor": "#0A2342", "patch.linewidth": 0.6,
-    "xtick.color": "#2C4260", "ytick.color": "#2C4260", "xtick.labelsize": 9.5, "ytick.labelsize": 9.5, "text.color": FARBE["text"],
+    "axes.edgecolor": "#8794A6", "axes.labelcolor": FARBE["text"], "axes.linewidth": 1.0,
+    "patch.force_edgecolor": False,
+    "xtick.color": "#4B5A6E", "ytick.color": "#4B5A6E", "xtick.labelsize": 9.5, "ytick.labelsize": 9.5, "text.color": FARBE["text"],
     "axes.titleweight": "bold", "axes.titlesize": 12, "axes.titlelocation": "left",
     "figure.dpi": 110, "axes.titlecolor": CI["titel"], "savefig.bbox": "tight", "text.parse_math": False,
 })
@@ -54,7 +54,7 @@ GELD = FuncFormatter(lambda v, _: zahl(v, 0))
 
 
 def _bbox(farbe="white"):
-    return dict(boxstyle="round,pad=0.25", fc=farbe, ec="#C3CEDC", lw=0.6, alpha=0.95)
+    return dict(boxstyle="round,pad=0.25", fc=farbe, ec="#E3E7ED", lw=0.6, alpha=0.95)
 
 
 # ------------------------------------------------------------- Monate Ist vs Plan
@@ -63,7 +63,7 @@ def monate_ist_plan(t: pd.DataFrame):
     fig, ax = plt.subplots(figsize=(10, 4.2))
     x = np.arange(len(t))
     farben = [FARBE["gut"] if i >= p else FARBE["schlecht"] for i, p in zip(t.umsatz, t.umsatz_plan)]
-    ax.bar(x, t.umsatz, color=farben, width=0.66, label=T("Ist (grün = über Plan, rot = darunter)", "Actual (green = above plan, red = below)"))
+    ax.bar(x, t.umsatz, color=farben, width=0.66, label=T("Ist (Navy = über Plan, Rot = darunter)", "Actual (navy = above plan, red = below)"))
     ax.hlines(t.umsatz_plan, x - 0.38, x + 0.38, color=CI["navy"], lw=2, label=T("Plan", "Plan"))
     top = max(t.umsatz.max(), t.umsatz_plan.max())
     for xi, i, p, a in zip(x, t.umsatz, t.umsatz_plan, t.abw_proz):
@@ -108,7 +108,7 @@ def db_wasserfall(z: dict):
         ax.bar(i, h, bottom=unten, color=farbe, width=0.6)
         ax.text(i, unten + h + hoch * 0.02, text, ha="center", va="bottom", fontsize=10, fontweight="bold")
         if i < len(schritte) - 1:
-            ax.plot([i + 0.3, i + 0.7], [stand, stand], color="#556F8E", lw=0.8, ls=":")
+            ax.plot([i + 0.3, i + 0.7], [stand, stand], color="#8794A6", lw=0.8, ls=":")
     ax.set_xticks(range(len(schritte)), [s[0] for s in schritte])
     ax.yaxis.set_major_formatter(TSD)
     unten_min = min(z["ist"], z["plan"]) * 0.6
@@ -116,7 +116,7 @@ def db_wasserfall(z: dict):
     ax.set_title(T("DB I: vom Plan zum Ist", "Contribution margin I: from plan to actual"))
     ax.text(0, -0.16, T(f"Achse beginnt bei {zahl(unten_min / 1000, 0)} Tsd. $, damit die Effekte sichtbar sind.",
                         f"Axis starts at ${zahl(unten_min / 1000, 0)}k so the effects are visible."),
-            transform=ax.transAxes, fontsize=8, color="#3D5470")
+            transform=ax.transAxes, fontsize=8, color="#4B5A6E")
     fig.tight_layout()
     return fig
 
@@ -134,7 +134,7 @@ def abweichung_balken(t: pd.DataFrame, dim: str, titel: str):
         txt = f"{proz(a)}  ({'+' if b >= 0 else ''}{geld(b)})"
         ax.text(a * 100 + (spann * 0.03 if a >= 0 else -spann * 0.03), yi, txt,
                 va="center", ha="left" if a >= 0 else "right", fontsize=9, fontweight="bold")
-    ax.axvline(0, color="#556F8E", lw=1)
+    ax.axvline(0, color="#8794A6", lw=1)
     ax.set_yticks(y, t[dim])
     ax.set_xlim(-spann * 2.1, spann * 2.1)
     ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: zahl(v, 0) + T(" %", "%")))
@@ -157,11 +157,11 @@ def fixkosten_balken(t: pd.DataFrame, titel: str, gelb_ab: float = 0.05, rot_ab:
         ax.text(max(a, 0) * 100 + spann * 0.03, yi, txt, va="center", ha="left", fontsize=9, fontweight="bold",
                 bbox=_bbox())
     g, r = gelb_ab * 100, rot_ab * 100
-    ax.axvline(0, color="#556F8E", lw=1)
+    ax.axvline(0, color="#8794A6", lw=1)
     ax.axvline(g, color=FARBE["gelb"], lw=1.4, ls="--", zorder=0)
     ax.axvline(r, color=FARBE["linie_rot"], lw=1.4, ls="--", zorder=0)
     ax.annotate(T(f"gelb ab +{zahl(g, 0)} %", f"amber from +{zahl(g, 0)}%"), (g, len(t) - 0.3), xytext=(5, 0), textcoords="offset points",
-                color="#A84F0F", fontsize=8, va="bottom", ha="left")
+                color="#4B5A6E", fontsize=8, va="bottom", ha="left")
     ax.annotate(T(f"rot ab +{zahl(r, 0)} %", f"red from +{zahl(r, 0)}%"), (r, len(t) - 0.3), xytext=(5, 0), textcoords="offset points",
                 color=FARBE["neg_text"], fontsize=8, va="bottom", ha="left")
     ax.set_yticks(y, [B(k) for k in t.kostenart])
@@ -194,7 +194,7 @@ def rabatt_stufen(rp: pd.DataFrame):
         off = rp.db1.abs().max() * 0.02
         ax.text(max(db, 0) + off, yi, txt, va="center", ha="left",
                 fontsize=8.5, fontweight="bold" if zr == "Ist" else "normal")
-    ax.axvline(0, color="#556F8E", lw=1)
+    ax.axvline(0, color="#8794A6", lw=1)
     ax.set_yticks(y, [z[0] for z in zeilen])
     ax.set_xlim(min(rp.db1.min() * 1.25, 0), rp.db1.max() * 2.05)
     ax.xaxis.set_major_formatter(TSD)
@@ -209,12 +209,12 @@ def liquiditaet(prog: dict, stichtag: pd.Timestamp):
     v, f = prog["vergangen"], prog["tag"]
     ax.plot(v.index, v.values, color=CI["blau"], lw=2.4, label=T("Kontostand Ist (13 Wochen zurück)", "Actual balance (13 weeks back)"))
     verbund = pd.concat([pd.Series([prog["start"]], index=[stichtag]), f])
-    ax.plot(verbund.index, verbund.values, color="#F28C28", lw=2.6, ls="--", label=T("Prognose (13 Wochen)", "Forecast (13 weeks)"))
+    ax.plot(verbund.index, verbund.values, color="#8A9BB5", lw=2.6, ls="--", label=T("Prognose (13 Wochen)", "Forecast (13 weeks)"))
     if len(prog["tatsaechlich"]):
         ax.plot(prog["tatsaechlich"].index, prog["tatsaechlich"].values, color=FARBE["grau"], lw=1.2, ls=":",
                 label=T("tatsächlich eingetreten (Rückblick)", "what actually happened (hindsight)"))
     ax.axhline(prog["puffer"], color=FARBE["linie_rot"], lw=1.4, ls="--")
-    ax.axvline(stichtag, color="#8A9BB0", lw=1)
+    ax.axvline(stichtag, color="#9AA6B6", lw=1)
     mt = prog["minimum_tag"]
     alle = pd.concat([v, verbund])
     lo, hi = min(alle.min(), prog["puffer"], 0), max(alle.max(), prog["puffer"])
@@ -232,13 +232,13 @@ def liquiditaet(prog: dict, stichtag: pd.Timestamp):
                 + (T("\n= tiefster Stand", "\n= lowest point") if mt == stichtag else ""),
                 (stichtag, prog["start"]),
                 xytext=(0, -62), textcoords="offset points", ha="center", fontsize=8.5, fontweight="bold",
-                arrowprops=dict(arrowstyle="-", color="#556F8E"), bbox=_bbox())
+                arrowprops=dict(arrowstyle="-", color="#8794A6"), bbox=_bbox())
     mt, mv = prog["minimum_tag"], prog["minimum"]
     ende_t = f.index[-1]
     if mt > stichtag and (ende_t - mt).days > 10:
         ax.annotate(T("Tiefster Stand", "Lowest point") + f"\n{geld(mv)} ({_tm(mt)})", (mt, mv), xytext=(0, -34),
                     textcoords="offset points", ha="center", fontsize=8.5, bbox=_bbox(),
-                    arrowprops=dict(arrowstyle="-", color="#556F8E"))
+                    arrowprops=dict(arrowstyle="-", color="#8794A6"))
         ax.plot([mt], [mv], "o", color=CI["orange"], ms=5)
     if mt == ende_t:
         zusatz = T("\n= tiefster Stand", "\n= lowest point")
@@ -267,7 +267,7 @@ def liquiditaet(prog: dict, stichtag: pd.Timestamp):
                     xytext=(10, -24) if (stichtag - tief_t).days >= 45 else (-10, -24),   # nah am Stichtag: nach links
                     ha="left" if (stichtag - tief_t).days >= 45 else "right",
                     textcoords="offset points", va="top", fontsize=8.5, bbox=_bbox(),
-                    arrowprops=dict(arrowstyle="-", color="#556F8E"))
+                    arrowprops=dict(arrowstyle="-", color="#8794A6"))
     ax.yaxis.set_major_formatter(GELD)
     ax.xaxis.set_major_formatter(mdates.DateFormatter(T("%d.%m.%y", "%d %b %y")))
     ax.set_xlim(v.index[0], ende_t + pd.Timedelta(days=24))
@@ -349,14 +349,14 @@ def ebit_bruecke(z: dict):
             stand = wert
         else:
             unten, h = (stand, wert) if wert >= 0 else (stand + wert, -wert)
-            farbe = FARBE["gut"] if wert > 0 else FARBE["schlecht"] if wert < 0 else "#C3CEDC"
+            farbe = FARBE["gut"] if wert > 0 else FARBE["schlecht"] if wert < 0 else "#E3E7ED"
             txt = ("+" if wert > 0 else "") + geld(wert) if abs(wert) >= 0.5 else "±0 $"
             stand += wert
         ax.bar(i, max(h, rng * 0.004), bottom=unten, color=farbe, width=0.6)
         ax.text(i, unten + h + rng * 0.03, txt, ha="center", va="bottom", fontsize=9.5, fontweight="bold")
         if i < len(schritte) - 1:
-            ax.plot([i + 0.3, i + 0.7], [stand, stand], color="#556F8E", lw=0.8, ls=":")
-    ax.axhline(0, color="#556F8E", lw=1)
+            ax.plot([i + 0.3, i + 0.7], [stand, stand], color="#8794A6", lw=0.8, ls=":")
+    ax.axhline(0, color="#8794A6", lw=1)
     ax.set_ylim(lo - rng * 0.08 if lo < 0 else 0, hi + rng * 0.2)
     ax.set_xticks(range(len(schritte)), [s[0] for s in schritte])
     ax.yaxis.set_major_formatter(TSD)
@@ -388,7 +388,7 @@ def break_even(z: dict):
             ax.plot([k["break_even"]], [k["fix"]], "o", color=farbe, ms=8, mec=CI["navy"])
             ax.annotate(f"Break-even {name}\n{geld(k['break_even'])} " + T("Umsatz", "revenue"), (k["break_even"], k["fix"]),
                         xytext=(0, 34 if seite > 0 else -46), textcoords="offset points", ha="center",
-                        fontsize=8.5, fontweight="bold", bbox=_bbox(), arrowprops=dict(arrowstyle="-", color="#556F8E"))
+                        fontsize=8.5, fontweight="bold", bbox=_bbox(), arrowprops=dict(arrowstyle="-", color="#8794A6"))
         ax.axvline(k["umsatz"], color=farbe, lw=1.1, ls="-.")
         ax.annotate(T(f"Umsatz {name} {geld(k['umsatz'])}\nEBIT {geld(k['ebit'])} · Sicherheitsabstand {proz(k['sicherheit'], False, 0)}",
                       f"Revenue {name} {geld(k['umsatz'])}\nEBIT {geld(k['ebit'])} · safety margin {proz(k['sicherheit'], False, 0)}"),
@@ -412,7 +412,7 @@ def liq_vergleich(p0: dict, p1: dict, stichtag: pd.Timestamp):
     ende0, ende1 = p0["tag"].iloc[-1], p1["tag"].iloc[-1]
     gleich = abs(ende0 - ende1) < 1 and abs(p0["minimum"] - p1["minimum"]) < 1
     HEUTE = T("heute", "today")
-    kurven = [(p0, HEUTE, FARBE["plan"], "-")] + ([] if gleich else [(p1, T("Szenario", "scenario"), "#F28C28", "--")])
+    kurven = [(p0, HEUTE, FARBE["plan"], "-")] + ([] if gleich else [(p1, T("Szenario", "scenario"), "#8A9BB5", "--")])
     for p, name, farbe, ls in kurven:
         r = pd.concat([pd.Series([p["start"]], index=[stichtag]), p["tag"]])
         mt = HEUTE if p["minimum_tag"] == stichtag else _tm(p["minimum_tag"])
@@ -556,10 +556,10 @@ def benchmark_punkte(bm: pd.DataFrame, eigen: str, namen: dict[str, str], eigen_
         gleich = abs(r[eigen] - r.branche) < 0.05          # in der Anzeige gleich (eine Nachkommastelle)
         besser = (r[eigen] >= r.branche) if r.hoch_gut else (r[eigen] <= r.branche)
         farbe = FARBE["gelb"] if gleich else FARBE["gut"] if besser else FARBE["schlecht"]
-        textfarbe = "#A84F0F" if gleich else FARBE["pos_text"] if besser else FARBE["neg_text"]
-        ax.axhline(0, color="#C3CEDC", lw=1, zorder=0)
+        textfarbe = "#4B5A6E" if gleich else FARBE["pos_text"] if besser else FARBE["neg_text"]
+        ax.axhline(0, color="#E3E7ED", lw=1, zorder=0)
         ax.plot([r.branche, r.branche], [-0.28, 0.8], color=CI["navy"], ls="--", lw=1.4, zorder=1)
-        ax.scatter(list(andere.values()), [0] * len(andere), s=55, color="#A9B8CC", edgecolor=CI["navy"],
+        ax.scatter(list(andere.values()), [0] * len(andere), s=55, color="#B8C3D2", edgecolor=CI["navy"],
                    lw=0.6, zorder=2)
         ax.scatter([r[eigen]], [0], s=190, color=farbe, edgecolor=CI["navy"], lw=0.8, zorder=3)
         # eigener Wert oben
@@ -577,7 +577,7 @@ def benchmark_punkte(bm: pd.DataFrame, eigen: str, namen: dict[str, str], eigen_
             ax.annotate(txt, (x, -0.12 if not ist_branche else -0.1), xytext=(px, -0.75), ha="center", va="top",
                         fontsize=8.5, color=CI["navy"] if ist_branche else FARBE["grau"],
                         fontweight="bold" if ist_branche else "normal",
-                        arrowprops=dict(arrowstyle="-", color="#A9B8CC", lw=0.7))
+                        arrowprops=dict(arrowstyle="-", color="#B8C3D2", lw=0.7))
         richtung = T("höher = besser", "higher = better") if r.hoch_gut else T("niedriger = besser", "lower = better")
         ax.set_title(f"{r.titel}  ({richtung})", fontsize=10.5)
         ax.set_yticks([])
@@ -590,8 +590,8 @@ def benchmark_punkte(bm: pd.DataFrame, eigen: str, namen: dict[str, str], eigen_
 
 
 # ------------------------------------------------------------- Datenaufbereitung
-PASTELL = {"R": "#A8D8C0", "A": "#F2B8C0", "H": "#FBD7A8"}
-PASTELL_RAND = {"R": "#4F9C78", "A": "#B5606D", "H": "#C08A3E"}
+PASTELL = {"R": "#C9D3E2", "A": "#F0C4C1", "H": "#E3E7ED"}
+PASTELL_RAND = {"R": "#5B7499", "A": "#B42318", "H": "#8794A6"}
 
 
 def bereinigung_regeln(t: pd.DataFrame, zeilen: int, texte: dict[str, str]):

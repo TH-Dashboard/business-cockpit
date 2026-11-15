@@ -1,10 +1,19 @@
 [theme]
+# Design „Navy · Seitenleiste“: ruhiges Navy, neutrale Grautöne, Rot nur für Werte unter Plan
 base = "light"
-primaryColor = "#1A63B7"
-backgroundColor = "#E2E8F1"
+primaryColor = "#0F2A4A"
+backgroundColor = "#F6F7F9"
 secondaryBackgroundColor = "#FFFFFF"
-textColor = "#0A2342"
+textColor = "#0F2A4A"
 font = "sans serif"
+borderColor = "#E3E7ED"
+baseRadius = "medium"
+redColor = "#B42318"
+
+[theme.sidebar]
+backgroundColor = "#0F2A4A"
+secondaryBackgroundColor = "#1B3A60"
+textColor = "#DCE3EC"
 
 [server]
 maxUploadSize = 20   # MB; passt zu UPLOAD_MAX_MB in app.py und zum Hinweis im Upload-Feld

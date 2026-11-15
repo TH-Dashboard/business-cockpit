@@ -324,12 +324,12 @@ SCHEMA = "https://developer.microsoft.com/json-schemas/fabric"
 
 # ---------------------------------------------------------------- Berichtsstil (Farben wie die Streamlit-App)
 STIL = {
-    "navy": "#0A2342", "blau": "#1A63B7", "hellblau": "#7DB9FF", "orange": "#F28C28", "grau": "#3D5470",
-    "seite": "#E2E8F1", "karte": "#FFFFFF", "rand": "#C3CEDC", "kopf": "#E8EEF6", "zeile": "#F5F8FC",
-    "summe": "#FDE6D2", "gruen": "#2E9E5B", "rot": "#D0435E",
+    "navy": "#0F2A4A", "blau": "#5B7499", "hellblau": "#D5DCE6", "orange": "#8A9BB5", "grau": "#4B5A6E",
+    "seite": "#F6F7F9", "karte": "#FFFFFF", "rand": "#E3E7ED", "kopf": "#EEF1F5", "zeile": "#F8F9FB",
+    "summe": "#EEF1F5", "gruen": "#7A8FB0", "rot": "#E7A3A0",
 }
 DATENFARBEN = [STIL["blau"], STIL["orange"], STIL["hellblau"], STIL["gruen"], STIL["navy"], STIL["rot"],
-               "#9FB4CC", "#F6B98A"]
+               "#AEB9C9", "#C9D1DC"]
 THEMA_NAME = "Cockpit_TH.json"
 UNTERTITEL = "Unternehmer-Cockpit · TH-Dashboard"
 
